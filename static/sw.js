@@ -21,7 +21,7 @@
  */
 
 const CACHE_NAME = 'uzapap-pos-v1';
-const APP_SHELL_URLS = ['/'];
+const APP_SHELL_URLS = ['/', '/app'];
 const RUNTIME_CACHEABLE_GET_PATHS = ['/medicines', '/inventory', '/customers', '/suppliers'];
 
 self.addEventListener('install', (event) => {

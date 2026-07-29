@@ -978,7 +978,7 @@ async function doLogin() {
     const meRes = await fetch(API + '/auth/me', { headers: {'Authorization': `Bearer ${d.access_token}`} });
     if (meRes.ok) localStorage.setItem('pos_me', JSON.stringify(await meRes.json()));
     toast('Signing in...', 'success', 2000);
-    setTimeout(() => { window.location.href = '/'; }, 1000);
+    setTimeout(() => { window.location.href = '/app'; }, 1000); 
   } catch(e) { showLoginError('Could not reach server.'); }
 }
 document.getElementById('li-pass')?.addEventListener('keydown', e => {

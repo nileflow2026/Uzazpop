@@ -208,7 +208,11 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.get("/", include_in_schema=False)
 def serve_frontend():
     return FileResponse("static/index.html")
-""" return FileResponse("static/pharmacy_pos_frontend.html") """
+
+@app.get("/app", include_in_schema=False)
+def serve_app():
+    return FileResponse("static/pharmacy_pos_frontend.html")
+
 
 @app.get("/sw.js", include_in_schema=False)
 def serve_service_worker():
