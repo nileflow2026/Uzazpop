@@ -78,6 +78,7 @@ def _generate_password() -> tuple[str, str]:
     """
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
     shortcode = settings.MPESA_SHORTCODE
+    shortcode_type = settings.MPESA_SHORTCODE_TYPE
     passkey = settings.MPESA_PASSKEY.get_secret_value()
     raw = f"{shortcode}{passkey}{timestamp}"
     password = base64.b64encode(raw.encode()).decode()
@@ -115,10 +116,10 @@ def stk_push(
         "BusinessShortCode": settings.MPESA_SHORTCODE,
         "Password": password,
         "Timestamp": timestamp,
-        "TransactionType": "CustomerPayBillOnline",  # Use "CustomerBuyGoodsOnline" for Till
+        "TransactionType": "CustomerBuyGoodsOnline",  # Use "CustomerBuyGoodsOnline" for Till
         "Amount": int(amount),                        # Must be integer, no decimals
         "PartyA": phone_number,                       # Customer phone
-        "PartyB": settings.MPESA_SHORTCODE,           # Your shortcode
+        "PartyB": settings.MPESA_SHORTCODE_TYPE,           # Your shortcode
         "PhoneNumber": phone_number,
         "CallBackURL": settings.MPESA_CALLBACK_URL,
         "AccountReference": account_reference[:12],   # Max 12 chars

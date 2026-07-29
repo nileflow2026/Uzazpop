@@ -108,6 +108,7 @@ class Settings(BaseSettings):
     MPESA_CONSUMER_KEY: SecretStr  # From Daraja portal
     MPESA_CONSUMER_SECRET: SecretStr  # From Daraja portal
     MPESA_SHORTCODE: str  # Your Paybill or Till number
+    MPESA_SHORTCODE_TYPE: str = "paybill"  # "paybill" or "till"
     MPESA_PASSKEY: SecretStr  # Lipa Na M-Pesa Online passkey from portal
     MPESA_CALLBACK_URL: str  # Public HTTPS URL Safaricom will POST results to
     MPESA_ENV: str = "sandbox"  # "sandbox" or "production"

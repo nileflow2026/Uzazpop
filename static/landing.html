@@ -732,8 +732,9 @@ footer { background: var(--bg2); border-top: 1.5px solid var(--border); padding:
 <div class="toast-wrap" id="toasts"></div>
 
 <script>
-const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:8000' : '';
+const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'http://localhost:8000'
+  : '';
 
 function toast(msg, type='info', ms=4000) {
   const w = document.getElementById('toasts');
@@ -895,7 +896,7 @@ async function processPayment() {
       }
     }, 1000);
 
-    // Poll real payment status every 4s, matching the POS sales-payment flow
+    // Poll real payment status every 4s (matches POS sales-payment flow)
     pollTimer = setInterval(async () => {
       try {
         const sr = await fetch(API + `/payments/mpesa/${d.checkout_request_id}/status`);
@@ -906,7 +907,14 @@ async function processPayment() {
           document.getElementById('reg-step4').style.display = 'block';
           document.getElementById('mpesa-receipt-display').textContent = sd.mpesa_receipt || '—';
           toast('Payment confirmed! Welcome.', 'success', 6000);
-        } else if (sd.status === 'FAILED' || sd.status === 'CANCELLED') {
+        } else if (sd.status === 'CANCELLED') {
+          clearInterval(pollTimer); clearInterval(countdownTimer);
+          document.getElementById('reg-step3').style.display = 'none';
+          document.getElementById('reg-step2').style.display = 'block';
+          document.getElementById('pay-btn').disabled = false;
+          toast('You cancelled the payment on your phone. You can try again.', 'error', 6000);
+          showRegError('Cancelled on your phone. Tap "Pay Now" to retry.');
+        } else if (sd.status === 'FAILED') {
           clearInterval(pollTimer); clearInterval(countdownTimer);
           document.getElementById('reg-step3').style.display = 'none';
           document.getElementById('reg-step2').style.display = 'block';
@@ -914,7 +922,7 @@ async function processPayment() {
           showRegError(sd.result_desc || 'Payment was not completed. Try again.');
         }
         // else still PENDING — keep polling
-      } catch(e) { /* transient network hiccup — next poll will retry */ }
+      } catch(e) { /* transient hiccup — next poll will retry */ }
     }, 4000);
 
   } catch(e) {

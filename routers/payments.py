@@ -159,7 +159,16 @@ async def mpesa_callback(request: Request, db: Session = Depends(get_db)):
         txn.result_desc = parsed["result_desc"]
         txn.mpesa_receipt = parsed["mpesa_receipt"]
         txn.updated_at = datetime.now(timezone.utc)
-        txn.status = MpesaStatus.SUCCESS if parsed["success"] else MpesaStatus.FAILED
+
+        if parsed["success"]:
+            txn.status = MpesaStatus.SUCCESS
+        elif parsed["result_code"] == 1032:
+            txn.status = MpesaStatus.CANCELLED
+        elif parsed["result_code"] == 1037:
+            txn.status = MpesaStatus.FAILED
+            txn.result_desc = "Payment timeout - customer did not enter PIN within time"
+        else:
+            txn.status = MpesaStatus.FAILED
 
         # Verify amount matches what we expected (prevents underpayment attacks)
         if parsed["success"] and parsed["amount"] is not None:
@@ -271,9 +280,15 @@ def get_payment_status(
                 if result_code == 0:
                     txn.status = MpesaStatus.SUCCESS
                     txn.result_desc = result.get("ResultDesc")
-                elif result_code != 1032:  # 1032 = still waiting
+                elif result_code == 1032:
+                    txn.status = MpesaStatus.CANCELLED
+                    txn.result_desc = "Cancelled by customer"
+                elif result_code == 1037:
                     txn.status = MpesaStatus.FAILED
-                    txn.result_desc = result.get("ResultDesc")
+                    txn.result_desc = "Payment timeout - customer did not enter PIN within time"
+                else:
+                    txn.status = MpesaStatus.FAILED
+                    txn.result_desc = result.get("ResultDesc", "Payment failed")
                 txn.updated_at = datetime.now(timezone.utc)
                 db.commit()
             except Exception as e:
