@@ -296,13 +296,14 @@ def register_initiate(payload: RegisterInitiateIn, request: Request, db: Session
     Poll GET /payments/mpesa/{checkout_request_id}/status to know when
     it's done, matching the existing sales-payment flow.
     """
-    if db.query(User).first() is not None:
+    email = payload.email.strip().lower()
+    existing_user = db.query(User).filter(User.email == email).first()
+    if existing_user is not None:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="This pharmacy is already set up. Please sign in instead.",
+            detail="An account with this email already exists.",
         )
 
-    email = payload.email.strip().lower()
     if "@" not in email:
         raise HTTPException(status_code=400, detail="Enter a valid email address")
 
