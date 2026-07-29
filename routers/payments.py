@@ -22,6 +22,7 @@ from services.mpesa_service import stk_push, query_stk_status, parse_callback
 from utils.errors import safe_error
 from utils.security import get_current_user, get_current_user_optional, require_admin_or_pharmacist
 from models.orm import User
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/payments/mpesa", tags=["Payments"])
