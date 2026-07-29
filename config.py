@@ -79,7 +79,8 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "http://localhost:5173",
         "https://uzazpop.onrender.com",
-        "https://uzazpop-frontend.onrender.com"
+        "https://uzazpop-frontend.onrender.com",
+        "https://uzazpap.memeyai.com"
     ]
 
     TRUSTED_HOSTS: list[str] = [
@@ -87,6 +88,7 @@ class Settings(BaseSettings):
         "127.0.0.1",
         "uzazpop.onrender.com", 
         "uzazpop-frontend.onrender.com"
+        "https://uzazpap.memeyai.com"
     ]
 
     # ── Validators ────────────────────────────────────────────────────────
