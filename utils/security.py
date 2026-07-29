@@ -127,6 +127,7 @@ def decode_refresh_token(token: str) -> int:
 # ── FastAPI dependencies ───────────────────────────────────────────────────────
 
 _bearer = HTTPBearer(auto_error=True)
+_bearer_optional = HTTPBearer(auto_error=False)
 
 
 def get_current_user(
@@ -150,6 +151,29 @@ def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found or account disabled",
         )
+    return user
+
+def get_current_user_optional(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer_optional),
+    db: Session = Depends(get_db),
+) -> Optional[User]:
+    """
+    Same as get_current_user, but returns None instead of raising when no
+    credentials are sent. Used for endpoints (like M-Pesa status polling)
+    that are hit both by logged-in staff and by anonymous users mid
+    self-registration, before their account exists.
+    """
+    if credentials is None:
+        return None
+    try:
+        payload = decode_access_token(credentials.credentials)
+        user_id = int(payload["sub"])
+    except (HTTPException, KeyError, ValueError):
+        return None
+
+    user = db.get(User, user_id)
+    if not user or not user.is_active:
+        return None
     return user
 
 

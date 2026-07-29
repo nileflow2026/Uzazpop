@@ -20,7 +20,7 @@ from models.orm import AuditLog, MpesaTransaction, MpesaStatus, Sale, SaleStatus
 from schemas.schemas import MpesaSTKPushIn, MpesaSTKPushOut, MpesaStatusOut
 from services.mpesa_service import stk_push, query_stk_status, parse_callback
 from utils.errors import safe_error
-from utils.security import get_current_user, require_admin_or_pharmacist
+from utils.security import get_current_user, get_current_user_optional, require_admin_or_pharmacist
 from models.orm import User
 
 logger = logging.getLogger(__name__)
@@ -252,7 +252,7 @@ async def mpesa_callback(request: Request, db: Session = Depends(get_db)):
             summary="Check payment status")
 def get_payment_status(
     checkout_request_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
 ):
     """
