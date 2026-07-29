@@ -1,0 +1,3230 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Uza Pap POS</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+/* ── TOKENS ── */
+:root{
+  --f:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  --fm:'SF Mono',Consolas,'Courier New',monospace;
+
+  /* dark theme */
+  --bg:#080c14;
+  --bg2:#0d1220;
+  --bg3:#111828;
+  --bg4:#18203a;
+  --bg5:#1f2940;
+
+  --accent:#3b82f6;
+  --accent-dim:rgba(59,130,246,.15);
+  --accent-glow:rgba(59,130,246,.08);
+
+  --emerald:#10b981;
+  --emerald-dim:rgba(16,185,129,.12);
+  --amber:#f59e0b;
+  --amber-dim:rgba(245,158,11,.12);
+  --rose:#f43f5e;
+  --rose-dim:rgba(244,63,94,.12);
+  --violet:#8b5cf6;
+  --violet-dim:rgba(139,92,246,.12);
+  --cyan:#06b6d4;
+
+  --text:#f0f4ff;
+  --text2:#8b9cc8;
+  --text3:#3d4e72;
+  --border:rgba(255,255,255,.06);
+  --border2:rgba(255,255,255,.11);
+
+  --r:10px;--r2:7px;
+  --sidebar:228px;
+  --topbar:54px;
+}
+
+[data-theme="light"]{
+  --bg:#f4f6fb;
+  --bg2:#ffffff;
+  --bg3:#f0f2f8;
+  --bg4:#e8ecf5;
+  --bg5:#dde3ef;
+  --text:#0f1628;
+  --text2:#5a6a8a;
+  --text3:#a0aec0;
+  --border:rgba(0,0,0,.07);
+  --border2:rgba(0,0,0,.13);
+  --accent-glow:rgba(59,130,246,.06);
+  --accent-dim:rgba(59,130,246,.1);
+}
+
+body{background:var(--bg);color:var(--text);font-family:var(--f);font-size:14px;min-height:100vh;display:flex;overflow:hidden;line-height:1.5}
+
+/* ── SIDEBAR ── */
+#sidebar{
+  width:var(--sidebar);min-width:var(--sidebar);
+  background:var(--bg2);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  height:100vh;z-index:10;
+  transition:width .25s ease;
+}
+.logo{
+  padding:18px 16px 14px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+}
+.logo-mark{
+  width:36px;height:36px;flex-shrink:0;
+  background:var(--accent);
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+}
+.logo-mark::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.2),transparent);
+}
+.logo-mark svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2}
+.logo-text{font-size:15px;font-weight:700;color:var(--text);letter-spacing:-.01em}
+.logo-sub{font-size:10px;color:var(--text2);margin-top:1px;font-weight:500}
+
+nav{padding:10px 8px;flex:1;overflow-y:auto}
+.nav-sect{
+  font-size:9px;font-weight:700;color:var(--text3);
+  letter-spacing:.1em;text-transform:uppercase;
+  padding:12px 10px 5px;
+}
+.ni{
+  display:flex;align-items:center;gap:9px;
+  padding:8px 10px;border-radius:var(--r2);
+  cursor:pointer;color:var(--text2);
+  font-size:13px;font-weight:500;
+  transition:all .12s;margin-bottom:1px;
+  border:none;background:none;width:100%;text-align:left;
+  position:relative;
+}
+.ni:hover{background:var(--bg3);color:var(--text)}
+.ni.active{background:var(--accent-dim);color:var(--accent);border:1px solid rgba(59,130,246,.2)}
+.ni-icon{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:7px;flex-shrink:0;font-size:15px}
+.ni.active .ni-icon{background:var(--accent-dim)}
+.ni-badge{
+  margin-left:auto;background:var(--rose);color:#fff;
+  padding:2px 6px;border-radius:8px;font-size:10px;font-weight:700;
+}
+
+.sidebar-footer{
+  padding:10px;border-top:1px solid var(--border);
+}
+.user-chip{
+  display:flex;align-items:center;gap:9px;
+  padding:9px 10px;border-radius:var(--r2);
+  cursor:pointer;transition:background .12s;
+}
+.user-chip:hover{background:var(--bg3)}
+.avatar{
+  width:32px;height:32px;border-radius:50%;
+  background:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;color:#fff;flex-shrink:0;
+}
+.user-info{flex:1;min-width:0}
+.user-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-role{font-size:10px;color:var(--text2);text-transform:capitalize;font-weight:500}
+
+/* ── MAIN ── */
+#main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.topbar{
+  height:var(--topbar);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 20px;gap:12px;
+  background:var(--bg2);flex-shrink:0;
+}
+.page-title{font-size:15px;font-weight:700;flex:1;letter-spacing:-.01em}
+.tb-btn{
+  padding:6px 13px;border-radius:var(--r2);
+  border:1px solid var(--border2);background:transparent;
+  color:var(--text2);cursor:pointer;font-size:12px;
+  font-family:var(--f);font-weight:500;
+  transition:all .12s;display:flex;align-items:center;gap:6px;
+}
+.tb-btn:hover{background:var(--bg3);color:var(--text)}
+.tb-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.tb-btn.primary:hover{background:#2563eb}
+.tb-icon{
+  width:32px;height:32px;border-radius:var(--r2);
+  border:1px solid var(--border2);background:transparent;
+  color:var(--text2);cursor:pointer;font-size:16px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .12s;
+}
+.tb-icon:hover{background:var(--bg3);color:var(--text)}
+#content{flex:1;overflow-y:auto;padding:20px}
+
+/* ── CARDS ── */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px}
+.card-hd{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:14px;
+}
+.card-title{font-size:13px;font-weight:700;color:var(--text);letter-spacing:-.01em}
+.card-sub{font-size:11px;color:var(--text2);margin-top:1px}
+
+/* ── STAT CARDS ── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.stat{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r);padding:16px 18px;
+  position:relative;overflow:hidden;transition:border-color .15s,transform .15s;
+}
+.stat:hover{border-color:var(--border2);transform:translateY(-1px)}
+.stat-accent{
+  position:absolute;top:0;left:0;right:0;height:2px;
+  border-radius:var(--r) var(--r) 0 0;
+}
+.stat-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.stat-icon-wrap{
+  width:36px;height:36px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;flex-shrink:0;
+}
+.stat-label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.stat-value{font-size:24px;font-weight:700;letter-spacing:-.02em;line-height:1}
+.stat-delta{font-size:11px;color:var(--text2);margin-top:4px;display:flex;align-items:center;gap:4px}
+.delta-up{color:var(--emerald)}
+.delta-dn{color:var(--rose)}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{
+  text-align:left;font-size:10px;font-weight:700;
+  color:var(--text3);text-transform:uppercase;letter-spacing:.08em;
+  padding:9px 12px;border-bottom:1px solid var(--border);
+  white-space:nowrap;
+}
+td{padding:11px 12px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--bg3);color:var(--text)}
+.td-strong{font-weight:600;color:var(--text)!important}
+.mono{font-family:var(--fm);font-size:12px}
+
+/* ── BADGES ── */
+.badge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700;
+  white-space:nowrap;
+}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.7}
+.b-green{background:var(--emerald-dim);color:var(--emerald)}
+.b-red{background:var(--rose-dim);color:var(--rose)}
+.b-amber{background:var(--amber-dim);color:var(--amber)}
+.b-blue{background:var(--accent-dim);color:var(--accent)}
+.b-violet{background:var(--violet-dim);color:var(--violet)}
+.b-gray{background:var(--bg4);color:var(--text2)}
+
+/* ── FORM ── */
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em}
+input,select,textarea{
+  background:var(--bg3);border:1px solid var(--border2);
+  border-radius:var(--r2);padding:9px 11px;
+  color:var(--text);font-size:13px;font-family:var(--f);
+  outline:none;transition:border-color .12s,box-shadow .12s;width:100%;
+}
+input:focus,select:focus,textarea:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(59,130,246,.12);
+}
+select option{background:var(--bg3)}
+textarea{resize:vertical;min-height:80px}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.full{grid-column:1/-1}
+
+/* ── BUTTONS ── */
+.btn{
+  padding:9px 16px;border-radius:var(--r2);border:none;
+  cursor:pointer;font-size:13px;font-family:var(--f);font-weight:600;
+  transition:all .12s;display:inline-flex;align-items:center;gap:7px;
+}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#2563eb}
+.btn-ghost{background:var(--bg3);color:var(--text2);border:1px solid var(--border2)}
+.btn-ghost:hover{color:var(--text);background:var(--bg4)}
+.btn-danger{background:var(--rose-dim);color:var(--rose);border:1px solid rgba(244,63,94,.2)}
+.btn-danger:hover{background:var(--rose);color:#fff}
+.btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+
+/* ── MODAL ── */
+.mo{
+  position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .18s;
+  backdrop-filter:blur(4px);
+}
+.mo.open{opacity:1;pointer-events:all}
+.mo-box{
+  background:var(--bg2);border:1px solid var(--border2);
+  border-radius:16px;padding:22px;
+  width:500px;max-width:92vw;max-height:88vh;
+  overflow-y:auto;
+  transform:scale(.96) translateY(8px);
+  transition:transform .18s;
+}
+.mo.open .mo-box{transform:scale(1) translateY(0)}
+.mo-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.mo-title{font-size:16px;font-weight:700;letter-spacing:-.01em}
+.close-x{
+  background:var(--bg3);border:none;color:var(--text2);cursor:pointer;
+  width:28px;height:28px;border-radius:6px;font-size:16px;
+  display:flex;align-items:center;justify-content:center;transition:all .12s;
+}
+.close-x:hover{background:var(--bg4);color:var(--text)}
+
+/* ── POS ── */
+.pos-wrap{display:grid;grid-template-columns:1fr 360px;gap:14px;height:calc(100vh - var(--topbar) - 40px)}
+.pos-left{display:flex;flex-direction:column;gap:12px;overflow:hidden}
+.pos-right{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r);display:flex;flex-direction:column;overflow:hidden;
+}
+.search-bar{
+  position:relative;
+}
+.search-bar input{padding-left:38px;background:var(--bg2);font-size:14px}
+.search-bar::before{
+  content:'🔍';position:absolute;left:12px;top:50%;transform:translateY(-50%);
+  font-size:14px;z-index:1;pointer-events:none;
+}
+.meds-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:9px;overflow-y:auto;flex:1;padding-right:2px;
+}
+.med-card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r);padding:13px;cursor:pointer;
+  transition:all .12s;position:relative;overflow:hidden;
+}
+.med-card:hover{border-color:var(--accent);background:var(--bg3);transform:translateY(-1px)}
+.med-card:active{transform:translateY(0)}
+.med-rx-tag{
+  position:absolute;top:8px;right:8px;
+  font-size:9px;font-weight:700;padding:2px 5px;
+  border-radius:4px;letter-spacing:.03em;
+}
+.med-name{font-weight:700;font-size:13px;margin-bottom:3px;color:var(--text);padding-right:28px;line-height:1.3}
+.med-generic{font-size:10px;color:var(--text3);margin-bottom:10px;font-weight:500}
+.med-foot{display:flex;align-items:center;justify-content:space-between}
+.med-price{font-family:var(--fm);font-weight:700;font-size:14px;color:var(--accent)}
+.med-stock{font-size:10px;font-weight:600}
+
+/* CART */
+.cart-hd{
+  padding:14px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.cart-hd-label{font-size:13px;font-weight:700}
+.cart-cnt{
+  background:var(--accent);color:#fff;
+  padding:2px 8px;border-radius:9px;font-size:11px;font-weight:700;
+}
+.cart-body{flex:1;overflow-y:auto;padding:10px}
+.cart-item{
+  display:flex;align-items:center;gap:9px;
+  padding:9px 11px;background:var(--bg3);
+  border-radius:var(--r2);margin-bottom:7px;
+  border:1px solid var(--border);
+}
+.ci-info{flex:1;min-width:0}
+.ci-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.ci-price{font-size:10px;color:var(--text2);font-weight:500;margin-top:1px}
+.qty-ctl{display:flex;align-items:center;gap:5px}
+.qty-btn{
+  width:22px;height:22px;border-radius:5px;
+  border:1px solid var(--border2);background:var(--bg2);
+  color:var(--text2);cursor:pointer;font-size:14px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .1s;font-weight:600;
+}
+.qty-btn:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+.ci-total{font-family:var(--fm);font-weight:700;font-size:12px;color:var(--text);min-width:64px;text-align:right}
+
+/* CART FOOTER */
+.cart-ft{padding:14px 16px;border-top:1px solid var(--border)}
+.total-rows{margin-bottom:12px}
+.tr{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:5px}
+.tr.grand{
+  font-size:18px;font-weight:800;color:var(--text);
+  border-top:1px solid var(--border);padding-top:10px;margin-top:8px;
+  font-family:var(--fm);
+}
+.pay-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.pay-opt{
+  padding:7px 4px;border-radius:var(--r2);
+  border:1px solid var(--border2);background:var(--bg3);
+  color:var(--text2);cursor:pointer;font-size:11px;font-weight:600;
+  transition:all .12s;text-align:center;display:flex;flex-direction:column;align-items:center;gap:2px;
+}
+.pay-opt .pi{font-size:16px}
+.pay-opt:hover{border-color:var(--accent);color:var(--accent)}
+.pay-opt.sel{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+.checkout-btn{
+  width:100%;padding:12px;font-size:14px;
+  border-radius:var(--r);border:none;cursor:pointer;
+  font-family:var(--f);font-weight:700;
+  background:var(--accent);color:#fff;
+  transition:all .12s;letter-spacing:.01em;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.checkout-btn:hover{background:#2563eb;transform:translateY(-1px)}
+.checkout-btn:active{transform:translateY(0)}
+.checkout-btn:disabled{background:var(--bg4);color:var(--text3);cursor:default;transform:none}
+
+/* ── ALERTS ── */
+.alert-card{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:12px 14px;background:var(--bg2);
+  border:1px solid var(--border);border-radius:var(--r);
+  margin-bottom:8px;transition:border-color .12s;
+}
+.alert-card:hover{border-color:var(--border2)}
+.alert-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.alert-body{flex:1}
+.alert-type{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
+.alert-msg{font-size:12px;color:var(--text2);line-height:1.5}
+.alert-time{font-size:10px;color:var(--text3);margin-top:4px}
+
+/* ── MPESA FLOW ── */
+.mpesa-modal .mo-box{width:420px}
+.mpesa-step{display:none}
+.mpesa-step.visible{display:block}
+.mpesa-status{
+  text-align:center;padding:24px 0;
+}
+.mpesa-pulse{
+  width:64px;height:64px;border-radius:50%;
+  background:var(--emerald-dim);border:2px solid var(--emerald);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 16px;font-size:28px;
+  animation:pulse 1.5s infinite;
+}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.3)}50%{box-shadow:0 0 0 12px rgba(16,185,129,0)}}
+.mpesa-receipt{
+  background:var(--bg3);border:1px solid var(--border2);
+  border-radius:var(--r);padding:14px;text-align:center;margin-top:12px;
+}
+.receipt-code{font-family:var(--fm);font-size:18px;font-weight:700;color:var(--emerald);letter-spacing:.1em}
+
+/* ── CHARTS ── */
+.charts-row{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;margin-bottom:18px}
+.chart-wrap{position:relative;height:200px}
+
+/* ── EXPIRY HEATMAP ── */
+.heatmap-row{display:flex;gap:6px;flex-wrap:wrap;padding:4px 0}
+.hm-item{
+  padding:5px 10px;border-radius:6px;font-size:11px;
+  font-weight:600;cursor:default;
+}
+.hm-expired{background:var(--rose-dim);color:var(--rose);border:1px solid rgba(244,63,94,.2)}
+.hm-soon{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,158,11,.2)}
+.hm-ok{background:var(--emerald-dim);color:var(--emerald);border:1px solid rgba(16,185,129,.2)}
+
+/* ── STOCK BAR ── */
+.stock-bar-wrap{display:flex;align-items:center;gap:8px}
+.stock-bar-bg{flex:1;height:5px;background:var(--bg4);border-radius:3px;overflow:hidden}
+.stock-bar-fill{height:100%;border-radius:3px;transition:width .4s ease}
+.stock-pct{font-size:10px;font-weight:700;min-width:26px;text-align:right;font-family:var(--fm)}
+
+/* ── MPESA STATUS BADGE ── */
+.mpesa-row{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--r2);padding:10px 14px;
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:8px;
+}
+
+/* ── SEARCH ── */
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.search-wrap{position:relative}
+.search-wrap input{padding-left:32px;width:220px}
+.search-wrap::before{content:'🔍';position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;pointer-events:none}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:48px 16px;color:var(--text3)}
+.empty-icon{font-size:38px;margin-bottom:12px;opacity:.4}
+.empty p{font-size:13px}
+
+/* ── TOAST ── */
+.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:999;display:flex;flex-direction:column;gap:7px}
+.toast{
+  padding:11px 16px;border-radius:var(--r);font-size:13px;font-weight:500;
+  display:flex;align-items:center;gap:9px;
+  animation:toastIn .3s ease;max-width:300px;
+  border-left:3px solid currentColor;
+}
+.toast.success{background:#052e16;color:var(--emerald)}
+.toast.error{background:#1c0a0a;color:var(--rose)}
+.toast.info{background:#0c1a2e;color:var(--accent)}
+.toast.warn{background:#1c1000;color:var(--amber)}
+@keyframes toastIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* ── LOGIN ── */
+#login-screen{
+  position:fixed;inset:0;
+  background:var(--bg);z-index:200;
+  display:flex;align-items:center;justify-content:center;
+}
+.login-wrap{
+  background:var(--bg2);border:1px solid var(--border2);
+  border-radius:20px;padding:36px;width:360px;
+}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-logo .lmark{
+  width:52px;height:52px;background:var(--accent);
+  border-radius:16px;display:flex;align-items:center;justify-content:center;
+  font-size:24px;margin:0 auto 12px;
+}
+.login-logo h1{font-size:22px;font-weight:800;letter-spacing:-.02em}
+.login-logo p{color:var(--text2);font-size:13px;margin-top:3px}
+
+/* ── REPORT STATS ── */
+.rpt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:0}
+
+/* ── MISC ── */
+.page{display:none}
+.page.active{display:block}
+.pos-page{display:none}
+.pos-page.active{display:flex;flex-direction:column}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.divider{height:1px;background:var(--border);margin:14px 0}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:4px}
+.pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+
+/* ── PROGRESS RING ── */
+.prog-ring{display:inline-block;position:relative;width:40px;height:40px}
+.prog-ring svg{transform:rotate(-90deg)}
+.prog-ring-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;font-family:var(--fm)}
+
+/* ── TABS (e.g. Medicines/Non-Medical filter) ── */
+.tab-group{display:flex;gap:4px;background:var(--bg3);padding:4px;border-radius:var(--r2);flex-wrap:wrap}
+.tab-btn{
+  padding:7px 13px;border-radius:6px;border:none;background:transparent;
+  color:var(--text2);cursor:pointer;font-size:12px;font-weight:600;
+  font-family:var(--f);transition:all .12s;white-space:nowrap;
+}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{background:var(--accent);color:#fff}
+
+/* ── MOBILE MENU TOGGLE (hidden on desktop) ── */
+.mobile-menu-btn{
+  display:none;width:36px;height:36px;flex-shrink:0;
+  border-radius:var(--r2);border:1px solid var(--border2);background:transparent;
+  color:var(--text);cursor:pointer;font-size:18px;
+  align-items:center;justify-content:center;
+}
+#sidebar-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);
+  z-index:9;backdrop-filter:blur(2px);
+}
+#sidebar-overlay.show{display:block}
+
+/* responsive */
+@media(max-width:1200px){
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .pos-wrap{grid-template-columns:1fr 320px}
+  .meds-grid{grid-template-columns:repeat(2,1fr)}
+  .charts-row{grid-template-columns:1fr}
+}
+
+/* ── TABLET / MOBILE (≤900px): off-canvas sidebar ── */
+@media(max-width:900px){
+  body{overflow-x:hidden}
+  #sidebar{
+    position:fixed;top:0;left:0;height:100vh;width:250px;min-width:250px;
+    transform:translateX(-100%);transition:transform .22s ease;z-index:20;
+    box-shadow:12px 0 32px rgba(0,0,0,.35);
+  }
+  #sidebar.mobile-open{transform:translateX(0)}
+  #main{width:100%;min-width:0}
+  .mobile-menu-btn{display:flex}
+  .pos-wrap{grid-template-columns:1fr;height:auto}
+  .pos-right{max-height:60vh}
+  .meds-grid{grid-template-columns:repeat(2,1fr)}
+  .sec-hd{flex-wrap:wrap;row-gap:10px}
+  .search-wrap{width:100%;flex:1 1 100%}
+  #content{padding:16px}
+}
+
+/* ── SMALL PHONES (≤600px) ── */
+@media(max-width:600px){
+  .topbar{flex-wrap:wrap;height:auto;min-height:var(--topbar);padding:8px 12px;row-gap:8px}
+  .page-title{flex-basis:100%;order:-1;font-size:15px}
+  #content{padding:12px}
+  .card{padding:14px}
+  .stats-row{grid-template-columns:1fr 1fr;gap:8px}
+  .fgrid{grid-template-columns:1fr}
+  .meds-grid{grid-template-columns:repeat(2,1fr);gap:7px}
+  .mo-box{width:94vw;padding:16px 14px;max-height:92vh}
+  th,td{padding:8px 9px;font-size:12px}
+  .btn,.tb-btn{padding:10px 14px;min-height:38px}
+  .ni{padding:11px 10px}
+  .pay-grid{grid-template-columns:repeat(3,1fr)}
+  .close-x,.tb-icon{width:34px;height:34px}
+  .card-hd{flex-wrap:wrap;gap:8px}
+  .two{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══ -->
+<div id="login-screen">
+  <div class="login-wrap">
+    <div class="login-logo">
+      <div class="lmark">💊</div>
+      <h1>Uza Pap POS</h1>
+      <p>Point of Sale System</p>
+    </div>
+    <div class="fg" style="margin-bottom:12px">
+      <label>Email Address</label>
+      <input type="email" id="li-email" value="admin@pharmacy.local" placeholder="admin@pharmacy.local"/>
+    </div>
+    <div class="fg" style="margin-bottom:6px">
+      <label>Password</label>
+      <div style="position:relative">
+        <input type="password" id="li-pass" value="Admin@12345" placeholder="••••••••" style="padding-right:40px;width:100%;box-sizing:border-box"/>
+        <button type="button" onclick="togglePw('li-pass',this)" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:15px;padding:4px;color:var(--text3)" title="Show/hide password">👁</button>
+      </div>
+    </div>
+    <div style="text-align:right;margin-bottom:12px">
+      <button type="button" onclick="openForgotPassword()" style="background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;padding:0">Forgot password?</button>
+    </div>
+    <button class="btn btn-primary" style="width:100%;padding:11px;font-size:14px" onclick="doLogin()">Sign In →</button>
+    <p style="text-align:center;color:var(--text3);font-size:11px;margin-top:14px">Uza Pap POS v2.0 · Pharmacy Edition · Kenya</p>
+  </div>
+</div>
+
+<!-- Forgot Password -->
+<div class="mo" id="mo-forgot-password">
+  <div class="mo-box">
+    <div class="mo-hd"><div class="mo-title">Reset Password</div><button class="close-x" onclick="closeMo('mo-forgot-password')">✕</button></div>
+    <div id="fp-step1">
+      <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Enter your account email — if it exists, we'll send a 6-digit reset code to it.</p>
+      <div class="fg full"><label>Email Address</label><input type="email" id="fp-email" placeholder="you@pharmacy.com"/></div>
+      <div class="btn-row"><button class="btn btn-ghost" onclick="closeMo('mo-forgot-password')">Cancel</button><button class="btn btn-primary" onclick="sendResetCode()">Send Reset Code</button></div>
+    </div>
+    <div id="fp-step2" style="display:none">
+      <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Enter the 6-digit code sent to your email, and choose a new password.</p>
+      <div class="fg full"><label>Reset Code</label><input id="fp-code" placeholder="123456" maxlength="6" style="letter-spacing:4px;font-family:var(--fm)"/></div>
+      <div class="fg full"><label>New Password</label>
+        <div style="position:relative">
+          <input type="password" id="fp-newpass" placeholder="Min 8 characters" style="padding-right:40px;width:100%;box-sizing:border-box"/>
+          <button type="button" onclick="togglePw('fp-newpass',this)" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:15px;padding:4px;color:var(--text3)">👁</button>
+        </div>
+      </div>
+      <div class="btn-row"><button class="btn btn-ghost" onclick="backToForgotStep1()">← Back</button><button class="btn btn-primary" onclick="submitResetCode()">Reset Password</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SIDEBAR ══ -->
+<div id="sidebar">
+  <div class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24"><path d="M12 2L3 7v10l9 5 9-5V7z"/><line x1="12" y1="22" x2="12" y2="12"/><line x1="3" y1="7" x2="12" y2="12"/><line x1="21" y1="7" x2="12" y2="12"/></svg>
+    </div>
+    <div>
+      <div class="logo-text">Uza Pap POS</div>
+      <div class="logo-sub">Pharmacy · Kenya</div>
+    </div>
+  </div>
+
+  <nav>
+    <div class="nav-sect">Main</div>
+    <button class="ni active" data-page="dashboard" onclick="goPage('dashboard',this)">
+      <div class="ni-icon">📊</div>Dashboard
+    </button>
+    <button class="ni" data-page="pos" onclick="goPage('pos',this)">
+      <div class="ni-icon">🛒</div>Point of Sale
+    </button>
+    <button class="ni" data-page="sales" onclick="goPage('sales',this)">
+      <div class="ni-icon">🧾</div>Sales History
+    </button>
+
+    <div class="nav-sect">Inventory</div>
+    <button class="ni" data-page="medicines" onclick="goPage('medicines',this)">
+      <div class="ni-icon">💊</div>Medicines
+    </button>
+    <button class="ni" data-page="inventory" data-roles="admin,pharmacist" onclick="goPage('inventory',this)">
+      <div class="ni-icon">📦</div>Stock
+    </button>
+    <button class="ni" data-page="suppliers" data-roles="admin,pharmacist" onclick="goPage('suppliers',this)">
+      <div class="ni-icon">🏭</div>Suppliers
+    </button>
+
+    <div class="nav-sect">Patients</div>
+    <button class="ni" data-page="customers" onclick="goPage('customers',this)">
+      <div class="ni-icon">👥</div>Customers
+    </button>
+
+    <div class="nav-sect">Admin</div>
+    <button class="ni" data-page="users" data-roles="admin" onclick="goPage('users',this)">
+      <div class="ni-icon">👤</div>Staff
+    </button>
+    <button class="ni" data-page="alerts" onclick="goPage('alerts',this)">
+      <div class="ni-icon">🔔</div>Alerts
+      <span class="ni-badge" id="alert-badge" style="display:none">0</span>
+    </button>
+    <button class="ni" data-page="reports" data-roles="admin,pharmacist" onclick="goPage('reports',this)">
+      <div class="ni-icon">📈</div>Reports
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-chip">
+      <div class="avatar" id="u-avatar">A</div>
+      <div class="user-info">
+        <div class="user-name" id="u-name">Admin</div>
+        <div class="user-role" id="u-role">Administrator</div>
+      </div>
+      <span style="color:var(--text3);cursor:pointer;font-size:16px" onclick="logout()" title="Sign out">↩</span>
+    </div>
+  </div>
+</div>
+
+<div id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div id="offline-banner" style="display:none;background:#7f1d1d;border-bottom:1px solid #dc2626;padding:8px 24px;font-size:12px;color:#fca5a5;align-items:center;gap:10px;flex-wrap:wrap">
+  <span>⚠️</span>
+  <span>You're offline. Cash/Card sales are saved locally and will sync automatically when connection returns. M-Pesa is unavailable offline.</span>
+  <span id="offline-queue-count" onclick="openOfflineQueueModal()" style="background:rgba(255,255,255,0.15);padding:2px 9px;border-radius:10px;font-weight:600;display:none;cursor:pointer" title="Click to review">0 pending</span>
+  <button onclick="syncOfflineQueue()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fca5a5;padding:3px 10px;border-radius:6px;cursor:pointer;font-size:11px;margin-left:auto">↻ Sync now</button>
+</div>
+
+<!-- ══ MAIN ══ -->
+<div id="main">
+  <div class="topbar">
+    <button class="mobile-menu-btn" onclick="toggleSidebar()" title="Menu" aria-label="Open menu">☰</button>
+    <div class="page-title" id="pg-title">Dashboard</div>
+    <button class="tb-btn" onclick="refreshPage()">↻ Refresh</button>
+    <button class="tb-icon" id="theme-btn" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+    <button class="tb-btn primary" id="tb-action" onclick="tbAction()">+ New Sale</button>
+  </div>
+
+  <div id="content">
+
+    <!-- ══ DASHBOARD ══ -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-row">
+        <div class="stat">
+          <div class="stat-accent" style="background:var(--accent)"></div>
+          <div class="stat-top">
+            <div>
+              <div class="stat-label">Active Medicines</div>
+              <div class="stat-value" id="d-meds">—</div>
+            </div>
+            <div class="stat-icon-wrap" style="background:var(--accent-dim)">💊</div>
+          </div>
+          <div class="stat-delta">in catalogue</div>
+        </div>
+        <div class="stat">
+          <div class="stat-accent" style="background:var(--emerald)"></div>
+          <div class="stat-top">
+            <div>
+              <div class="stat-label">Today's Revenue</div>
+              <div class="stat-value" id="d-rev" style="font-size:18px">—</div>
+            </div>
+            <div class="stat-icon-wrap" style="background:var(--emerald-dim)">💰</div>
+          </div>
+          <div class="stat-delta"><span id="d-sales-ct">—</span> sales today</div>
+        </div>
+        <div class="stat">
+          <div class="stat-accent" style="background:var(--amber)"></div>
+          <div class="stat-top">
+            <div>
+              <div class="stat-label">Low / Out of Stock</div>
+              <div class="stat-value" id="d-low">—</div>
+            </div>
+            <div class="stat-icon-wrap" style="background:var(--amber-dim)">⚠️</div>
+          </div>
+          <div class="stat-delta">need reorder</div>
+        </div>
+        <div class="stat">
+          <div class="stat-accent" style="background:var(--rose)"></div>
+          <div class="stat-top">
+            <div>
+              <div class="stat-label">Unresolved Alerts</div>
+              <div class="stat-value" id="d-alrt">—</div>
+            </div>
+            <div class="stat-icon-wrap" style="background:var(--rose-dim)">🔔</div>
+          </div>
+          <div class="stat-delta"><span id="d-expiring">—</span> expiring soon</div>
+        </div>
+      </div>
+
+      <!-- Charts row -->
+      <div class="charts-row">
+        <div class="card">
+          <div class="card-hd">
+            <div><div class="card-title">Revenue — Last 7 Days</div><div class="card-sub">Daily completed sales</div></div>
+          </div>
+          <div class="chart-wrap"><canvas id="rev-chart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-hd">
+            <div><div class="card-title">Payment Methods</div><div class="card-sub">Today's breakdown</div></div>
+          </div>
+          <div class="chart-wrap"><canvas id="pay-chart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="two">
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-title">Recent Sales</div>
+            <button class="tb-btn" style="font-size:11px;padding:4px 10px" onclick="goPage('sales',document.querySelector('[data-page=sales]'))">View all</button>
+          </div>
+          <div id="d-recent"></div>
+        </div>
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-title">Active Alerts</div>
+            <button class="tb-btn" style="font-size:11px;padding:4px 10px" onclick="goPage('alerts',document.querySelector('[data-page=alerts]'))">View all</button>
+          </div>
+          <div id="d-alerts"></div>
+        </div>
+      </div>
+
+      <!-- Expiry heatmap -->
+      <div class="card" style="margin-top:14px">
+        <div class="card-hd">
+          <div><div class="card-title">Stock Expiry Overview</div><div class="card-sub">Batches by expiry window</div></div>
+          <div style="display:flex;gap:10px;font-size:11px;font-weight:600;align-items:center">
+            <span style="color:var(--rose)">🔴 Expired</span>
+            <span style="color:var(--amber)">🟡 ≤30 days</span>
+            <span style="color:var(--emerald)">🟢 OK</span>
+          </div>
+        </div>
+        <div class="heatmap-row" id="expiry-heatmap"><span style="color:var(--text3);font-size:12px">Loading...</span></div>
+      </div>
+    </div>
+
+    <!-- ══ POS ══ -->
+    <div class="page pos-page" id="page-pos">
+      <div class="pos-wrap">
+        <div class="pos-left">
+          <div style="display:flex;gap:9px;align-items:center">
+            <div class="search-bar" style="flex:1">
+              <input type="text" id="med-q" placeholder="Search medicines by name, generic, barcode..." oninput="searchMeds()" autocomplete="off"/>
+            </div>
+            <button class="tb-btn" onclick="openMo('mo-customer')">👤 <span id="cust-label">Walk-in</span></button>
+          </div>
+          <div class="meds-grid" id="meds-grid">
+            <div class="empty" style="grid-column:1/-1"><div class="empty-icon">💊</div><p>Type to search medicines</p></div>
+          </div>
+        </div>
+
+        <div class="pos-right">
+          <div class="cart-hd">
+            <span class="cart-hd-label">🛒 Cart</span>
+            <span class="cart-cnt" id="cart-cnt">0</span>
+          </div>
+          <div class="cart-body" id="cart-body">
+            <div class="empty"><div class="empty-icon">🛒</div><p>Cart is empty</p></div>
+          </div>
+          <div class="cart-ft">
+            <div class="total-rows">
+              <div class="tr"><span>Subtotal</span><span id="c-sub" class="mono">KES 0.00</span></div>
+              <div class="tr grand"><span>Total</span><span id="c-total">KES 0.00</span></div>
+            </div>
+            <div class="pay-grid">
+              <div class="pay-opt sel" onclick="selPay('cash',this)"><span class="pi">💵</span>Cash</div>
+              <div class="pay-opt" onclick="selPay('mpesa',this)"><span class="pi">📱</span>M-Pesa</div>
+              <div class="pay-opt" onclick="selPay('card',this)"><span class="pi">💳</span>Card</div>
+            </div>
+            <button class="checkout-btn" id="checkout-btn" disabled onclick="doSale()">
+              Process Sale →
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SALES ══ -->
+    <div class="page" id="page-sales">
+      <div class="sec-hd">
+        <div class="search-wrap"><input type="text" id="sales-q" placeholder="Search receipt..." oninput="filterSales()"/></div>
+        <div style="display:flex;gap:8px">
+          <select id="sales-status-filter" onchange="filterSales()" style="width:130px;padding:7px 10px">
+            <option value="">All Statuses</option>
+            <option value="completed">Completed</option>
+            <option value="voided">Voided</option>
+          </select>
+        </div>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Receipt</th><th>Date & Time</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th></tr></thead>
+            <tbody id="sales-tb"><tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text3)">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ MEDICINES ══ -->
+    <div class="page" id="page-medicines">
+      <div class="sec-hd" style="flex-wrap:wrap;gap:10px">
+        <div class="search-wrap"><input type="text" id="med-search" placeholder="Search medicines..." oninput="filterMeds()"/></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="tb-btn" data-roles="admin" onclick="openBulkImportModal()">🇰🇪 Sync PPB Register</button>
+          <button class="tb-btn primary" data-roles="admin,pharmacist" onclick="openMo('mo-add-med')">+ Add Item</button>
+        </div>
+      </div>
+      <div class="sec-hd" style="flex-wrap:wrap;gap:10px;padding-top:0">
+        <div class="tab-group" id="med-type-tabs">
+          <button class="tab-btn active" data-type="" onclick="setMedTypeFilter('',this)">All Items</button>
+          <button class="tab-btn" data-type="medicine" onclick="setMedTypeFilter('medicine',this)">💊 Medicines</button>
+          <button class="tab-btn" data-type="non_medical" onclick="setMedTypeFilter('non_medical',this)">🧴 Non-Medical</button>
+        </div>
+        <select id="med-category-filter" onchange="filterMeds()" style="max-width:220px">
+          <option value="">All Categories</option>
+        </select>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Category</th><th>Generic</th><th>Form</th><th>Price</th><th>Type</th><th>Rx</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="meds-tb"><tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text3)">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ INVENTORY ══ -->
+    <div class="page" id="page-inventory">
+      <div class="sec-hd">
+        <span style="color:var(--text2);font-size:13px">Stock batches with expiry tracking</span>
+        <button class="tb-btn primary" onclick="openMo('mo-add-stock')">+ Receive Stock</button>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Medicine</th><th>Batch</th><th>Quantity</th><th>Cost</th><th>Sell Price</th><th>Expiry</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="inv-tb"><tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text3)">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SUPPLIERS ══ -->
+    <div class="page" id="page-suppliers">
+      <div class="sec-hd">
+        <div class="search-wrap"><input type="text" id="sup-q" placeholder="Search suppliers..." oninput="filterSuppliers()"/></div>
+        <button class="tb-btn primary" onclick="openMo('mo-add-supplier')">+ Add Supplier</button>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Company</th><th>Contact</th><th>Phone</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="sup-tb"><tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text3)">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CUSTOMERS ══ -->
+    <div class="page" id="page-customers">
+      <div class="sec-hd">
+        <div class="search-wrap"><input type="text" id="cust-q" placeholder="Search by name, phone..." oninput="filterCustomers()"/></div>
+        <button class="tb-btn primary" onclick="openMo('mo-add-customer')">+ Register Patient</button>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>ID Number</th><th>Loyalty Points</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="cust-tb"><tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text3)">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ STAFF ══ -->
+    <div class="page" id="page-users">
+      <div class="sec-hd">
+        <span style="color:var(--text2);font-size:13px">Manage staff accounts and permissions</span>
+        <button class="tb-btn primary" onclick="openMo('mo-add-user')">+ Add Staff</button>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Last Login</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="users-tb"><tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text3)">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ALERTS ══ -->
+    <div class="page" id="page-alerts">
+      <div class="sec-hd">
+        <div style="display:flex;gap:8px">
+          <button class="tb-btn" id="filter-unresolved" onclick="toggleAlertFilter(false)" style="background:var(--bg3)">Unresolved</button>
+          <button class="tb-btn" id="filter-resolved" onclick="toggleAlertFilter(true)">Resolved</button>
+        </div>
+        <button class="tb-btn primary" onclick="scanAlerts()">🔍 Scan Now</button>
+      </div>
+      <div id="alerts-wrap"><div class="empty"><div class="empty-icon">✅</div><p>No alerts</p></div></div>
+    </div>
+
+    <!-- ══ REPORTS ══ -->
+    <div class="page" id="page-reports">
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-hd"><div class="card-title">Sales Summary</div></div>
+        <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+          <div class="fg"><label>From</label><input type="date" id="rpt-from"/></div>
+          <div class="fg"><label>To</label><input type="date" id="rpt-to"/></div>
+          <button class="btn btn-primary" onclick="loadReport()">Generate Report</button>
+        </div>
+        <div id="rpt-result" style="margin-top:16px"></div>
+      </div>
+      <div class="two">
+        <div class="card">
+          <div class="card-hd"><div class="card-title">Top Selling Medicines</div></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>#</th><th>Medicine</th><th>Units</th><th>Revenue</th></tr></thead>
+              <tbody id="top-meds-tb"><tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text3)">Generate a report first</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div class="card-title">Stock by Medicine</div></div>
+          <div id="stock-summary-list"><div style="color:var(--text3);font-size:13px;padding:16px 0">Loading...</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ══ MODALS ══ -->
+
+<!-- Add Medicine -->
+<div class="mo" id="mo-add-med">
+  <div class="mo-box">
+    <div class="mo-hd"><div class="mo-title">Add Medicine</div><button class="close-x" onclick="closeMo('mo-add-med')">✕</button></div>
+    <div class="fgrid">
+      <div class="fg full" style="position:relative">
+        <label>Item Name *</label>
+        <input id="m-name" placeholder="e.g. Panadol Extra" autocomplete="off" oninput="checkDuplicateMedName()"/>
+        <div id="m-name-suggest" style="display:none;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r2);margin-top:4px;max-height:180px;overflow-y:auto;position:absolute;left:0;right:0;z-index:20"></div>
+      </div>
+      <div class="fg"><label>Item Type *</label>
+        <select id="m-itemtype" onchange="toggleMedTypeFields('m')">
+          <option value="medicine">Medicine</option>
+          <option value="non_medical">Non-Medical Product (cosmetics, baby items, supplies...)</option>
+        </select>
+      </div>
+      <div class="fg"><label>Category</label>
+        <input id="m-category" list="med-categories-list" placeholder="e.g. Analgesics, Baby Care..."/>
+        <datalist id="med-categories-list"></datalist>
+      </div>
+      <div class="fg"><label>Generic Name</label><input id="m-generic" placeholder="Paracetamol"/></div>
+      <div class="fg"><label>Brand Name</label><input id="m-brand" placeholder="Panadol"/></div>
+      <div class="fg med-only-field"><label>Dosage Form</label><input id="m-form" placeholder="Tablet, Syrup..."/></div>
+      <div class="fg med-only-field"><label>Strength</label><input id="m-strength" placeholder="500mg"/></div>
+      <div class="fg med-only-field"><label>Route</label><input id="m-route" placeholder="Oral, IV..."/></div>
+      <div class="fg"><label>Unit Price (KES) *</label><input type="number" id="m-price" placeholder="0.00" step="0.01"/></div>
+      <div class="fg"><label>Reorder Level</label><input type="number" id="m-reorder" placeholder="10"/></div>
+      <div class="fg"><label>Barcode</label><input id="m-barcode" placeholder="Optional"/></div>
+      <div class="fg"><label>Manufacturer</label><input id="m-mfg" placeholder="Optional"/></div>
+      <div class="fg med-only-field"><label>Prescription Required</label><select id="m-rx"><option value="false">No — OTC</option><option value="true">Yes — Rx</option></select></div>
+      <div class="fg med-only-field"><label>Controlled Substance</label><select id="m-ctrl"><option value="false">No</option><option value="true">Yes</option></select></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-ghost" onclick="closeMo('mo-add-med')">Cancel</button><button class="btn btn-primary" onclick="addMedicine()">Add Item</button></div>
+  </div>
+</div>
+
+<!-- Offline Sales Queue Review -->
+<div class="mo" id="mo-offline-queue">
+  <div class="mo-box">
+    <div class="mo-hd"><div class="mo-title">Offline Sales Queue</div><button class="close-x" onclick="closeMo('mo-offline-queue')">✕</button></div>
+    <div id="offline-queue-list"></div>
+    <div class="btn-row"><button class="btn btn-ghost" onclick="closeMo('mo-offline-queue')">Close</button><button class="btn btn-primary" onclick="syncOfflineQueue();renderOfflineQueueModal()">↻ Sync Now</button></div>
+  </div>
+</div>
+
+<!-- Edit Medicine -->
+<div class="mo" id="mo-edit-med">
+  <div class="mo-box">
+    <div class="mo-hd"><div class="mo-title">Edit Medicine</div><button class="close-x" onclick="closeMo('mo-edit-med')">✕</button></div>
+    <input type="hidden" id="em-id"/>
+    <div class="fgrid">
+      <div class="fg full"><label>Item Name *</label><input id="em-name" placeholder="e.g. Panadol Extra"/></div>
+      <div class="fg"><label>Item Type *</label>
+        <select id="em-itemtype" onchange="toggleMedTypeFields('em')">
+          <option value="medicine">Medicine</option>
+          <option value="non_medical">Non-Medical Product</option>
+        </select>
+      </div>
+      <div class="fg"><label>Category</label>
+        <input id="em-category" list="med-categories-list" placeholder="e.g. Analgesics, Baby Care..."/>
+      </div>
+      <div class="fg"><label>Generic Name</label><input id="em-generic" placeholder="Paracetamol"/></div>
+      <div class="fg"><label>Brand Name</label><input id="em-brand" placeholder="Panadol"/></div>
+      <div class="fg med-only-field"><label>Dosage Form</label><input id="em-form" placeholder="Tablet, Syrup..."/></div>
+      <div class="fg med-only-field"><label>Strength</label><input id="em-strength" placeholder="500mg"/></div>
+      <div class="fg"><label>Unit Price (KES) *</label><input type="number" id="em-price" placeholder="0.00" step="0.01"/></div>
+      <div class="fg"><label>Reorder Level</label><input type="number" id="em-reorder" placeholder="10"/></div>
+      <div class="fg"><label>Barcode</label><input id="em-barcode" placeholder="Optional"/></div>
+      <div class="fg"><label>Manufacturer</label><input id="em-mfg" placeholder="Optional"/></div>
+      <div class="fg med-only-field"><label>Prescription Required</label><select id="em-rx"><option value="false">No — OTC</option><option value="true">Yes — Rx</option></select></div>
+      <div class="fg med-only-field"><label>Controlled Substance</label><select id="em-ctrl"><option value="false">No</option><option value="true">Yes</option></select></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-ghost" onclick="closeMo('mo-edit-med')">Cancel</button><button class="btn btn-primary" onclick="saveEditMed()">Save Changes</button></div>
+  </div>
+</div>
+
+<!-- Bulk Import from Kenya PPB Register -->
+<div class="mo" id="mo-bulk-import">
+  <div class="mo-box">
+    <div class="mo-hd"><div class="mo-title">Sync Kenya PPB Register</div><button class="close-x" onclick="closeMo('mo-bulk-import')">✕</button></div>
+    <p style="font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:12px">
+      Pulls medicines actually registered for use in Kenya, straight from the
+      Pharmacy and Poisons Board's public register — trade names, generic (INN)
+      names, strengths, manufacturers, and PPB registration details. No manual
+      typing. Runs in batches automatically; already-imported medicines are
+      skipped. This can take a while for a full sync — you can stop anytime
+      and resume later from where you left off.
+    </p>
+    <div id="bi-catalogue-note" style="font-size:12px;color:var(--text2);background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:8px 10px;margin-bottom:12px"></div>
+    <div id="bi-progress-box" style="display:none;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:6px">
+        <span id="bi-progress-label">Starting…</span>
+        <span id="bi-progress-count">0 imported</span>
+      </div>
+      <div style="height:6px;background:var(--bg3);border-radius:4px;overflow:hidden">
+        <div id="bi-progress-bar" style="height:100%;width:2%;background:var(--accent);transition:width .3s"></div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px" id="bi-progress-detail"></div>
+    </div>
+    <div id="bi-resume-note" style="display:none;font-size:12px;color:var(--amber);background:rgba(245,158,11,.1);border:1px solid var(--amber);border-radius:var(--r2);padding:8px 10px;margin-bottom:12px"></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="closeMo('mo-bulk-import')" id="bi-close-btn">Close</button>
+      <button class="btn btn-ghost" style="display:none" id="bi-stop-btn" onclick="stopBulkImport()">Stop</button>
+      <button class="btn btn-primary" id="bi-run-btn" onclick="runBulkImport()">Start Import</button>
+    </div>
+  </div>
+</div>
+
+<!-- Receive Stock -->
+<div class="mo" id="mo-add-stock">
+  <div class="mo-box">
+    <div class="mo-hd"><div class="mo-title">Receive Stock</div><button class="close-x" onclick="closeMo('mo-add-stock')">✕</button></div>
+    <div class="fgrid">
+      <div class="fg full"><label>Medicine Name *</label><input type="text" id="s-med-search" placeholder="Type medicine name to search..." oninput="searchStockMedicine()" autocomplete="off"/>
+  <div id="s-med-results" style="display:none;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r2);margin-top:4px;max-height:160px;overflow-y:auto"></div>
+  <!-- Hidden field stores the selected medicine ID -->
+  <input type="hidden" id="s-med" value=""/>
+  <div id="s-med-selected" style="display:none;margin-top:6px;padding:8px 10px;background:var(--accent-dim);border:1px solid rgba(59,130,246,.2);border-radius:var(--r2);font-size:12px;color:var(--accent);font-weight:600"></div>
+</div>
+      <div class="fg"><label>Batch Number</label><input id="s-batch" placeholder="BATCH001"/></div>
+      <div class="fg"><label>Quantity *</label><input type="number" id="s-qty" placeholder="0"/></div>
+      <div class="fg"><label>Unit Cost (KES) *</label><input type="number" id="s-cost" step="0.01" placeholder="0.00"/></div>
+      <div class="fg"><label>Selling Price (KES) *</label><input type="number" id="s-price" step="0.01" placeholder="Auto-filled from medicine price"/></div>
+      <div class="fg"><label>Expiry Date</label><input type="date" id="s-exp"/></div>
+      <div class="fg"><label>Supplier ID</label><input type="number" id="s-sup" placeholder="Optional"/></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-ghost" onclick="closeMo('mo-add-stock')">Cancel</button><button class="btn btn-primary" onclick="addStock()">Receive Stock</button></div>
+  </div>
+</div>
+
+<!-- Edit Stock Batch -->
+<div class="mo" id="mo-edit-stock">
+  <div class="mo-box">
+    <div class="mo-hd"><div class="mo-title">Edit Stock Batch</div><button class="close-x" onclick="closeMo('mo-edit-stock')">✕</button></div>
+    <input type="hidden" id="es-id"/>
+    <div class="fg full" style="margin-bottom:10px">
+      <label>Medicine</label>
+      <div id="es-med-label" style="padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);font-weight:600"></div>
+    </div>
+    <div class="fgrid">
+      <div class="fg"><label>Quantity *</label><input type="number" id="es-qty" placeholder="0"/></div>
+      <div class="fg"><label>Selling Price (KES) *</label><input type="number" id="es-price" step="0.01" placeholder="0.00"/></div>
+      <div class="fg full"><label>Expiry Date</label><input type="date" id="es-exp"/></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-ghost" onclick="closeMo('mo-edit-stock')">Cancel</button><button class="btn btn-primary" onclick="saveEditStock()">Save Changes</button></div>
+  </div>
+</div>
+
+<!-- Add Supplier -->
+<div class="mo" id="mo-add-supplier">
+  <div class="mo-box">
+    <div class="mo-hd"><div class="mo-title">Add Supplier</div><button class="close-x" onclick="closeMo('mo-add-supplier')">✕</button></div>
+    <div class="fgrid">
+      <div class="fg full"><label>Company Name *</label><input id="sup-name" placeholder="Kenya Pharma Ltd"/></div>
+      <div class="fg"><label>Contact Person</label><input id="sup-contact" placeholder="Full name"/></div>
+      <div class="fg"><label>Phone</label><input id="sup-phone" placeholder="0712345678"/></div>
+      <div class="fg"><label>Email</label><input type="email" id="sup-email" placeholder="supplier@example.com"/></div>
+      <div class="fg full"><label>Address</label><textarea id="sup-addr" placeholder="Physical address"></textarea></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-ghost" onclick="closeMo('mo-add-supplier')">Cancel</button><button class="btn btn-primary" onclick="addSupplier()">Add Supplier</button></div>
+  </div>
+</div>
+
+<!-- Register Customer -->
+<div class="mo" id="mo-add-customer">
+  <div class="mo-box">
+    <div class="mo-hd"><div class="mo-title">Register Patient</div><button class="close-x" onclick="closeMo('mo-add-customer')">✕</button></div>
+    <div class="fgrid">
+      <div class="fg full"><label>Full Name *</label><input id="c-name" placeholder="Patient full name"/></div>
+      <div class="fg"><label>Phone</label><input id="c-phone" placeholder="0712345678"/></div>
+      <div class="fg"><label>Email</label><input type="email" id="c-email" placeholder="Optional"/></div>
+      <div class="fg"><label>National ID</label><input id="c-id" placeholder="ID Number"/></div>
+      <div class="fg"><label>Insurance No.</label><input id="c-ins" placeholder="Optional"/></div>
+      <div class="fg"><label>Date of Birth</label><input type="date" id="c-dob"/></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-ghost" onclick="closeMo('mo-add-customer')">Cancel</button><button class="btn btn-primary" onclick="addCustomer()">Register</button></div>
+  </div>
+</div>
+
+<!-- POS Customer Select -->
+<div class="mo" id="mo-customer">
+  <div class="mo-box">
+    <div class="mo-hd"><div class="mo-title">Select Customer</div><button class="close-x" onclick="closeMo('mo-customer')">✕</button></div>
+    <input type="text" placeholder="Search by name or phone..." id="pos-cust-q" oninput="searchPosCust()" style="margin-bottom:12px"/>
+    <div id="pos-cust-res" style="min-height:60px"><div style="color:var(--text3);font-size:13px;text-align:center;padding:16px">Type to search patients</div></div>
+    <div class="btn-row"><button class="btn btn-ghost" onclick="clearCustomer()">Walk-in (No Patient)</button></div>
+  </div>
+</div>
+
+<!-- Add Staff -->
+<div class="mo" id="mo-add-user">
+  <div class="mo-box">
+    <div class="mo-hd"><div class="mo-title">Add Staff Account</div><button class="close-x" onclick="closeMo('mo-add-user')">✕</button></div>
+    <div class="fgrid">
+      <div class="fg full"><label>Full Name *</label><input id="u-fname" placeholder="Staff full name"/></div>
+      <div class="fg"><label>Email *</label><input type="email" id="u-email" placeholder="staff@pharmacy.com"/></div>
+      <div class="fg"><label>Password *</label>
+        <div style="position:relative">
+          <input type="password" id="u-pass" placeholder="Min 8 characters" style="padding-right:40px;width:100%;box-sizing:border-box"/>
+          <button type="button" onclick="togglePw('u-pass',this)" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:15px;padding:4px;color:var(--text3)">👁</button>
+        </div>
+      </div>
+      <div class="fg"><label>Phone</label><input id="u-phone" placeholder="0712345678"/></div>
+      <div class="fg full"><label>Role *</label>
+        <select id="u-role-input">
+          <option value="cashier">Cashier</option>
+          <option value="pharmacist">Pharmacist</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+    </div>
+    <div class="btn-row"><button class="btn btn-ghost" onclick="closeMo('mo-add-user')">Cancel</button><button class="btn btn-primary" onclick="addUser()">Create Account</button></div>
+  </div>
+</div>
+
+<!-- Edit Staff -->
+<div class="mo" id="mo-edit-user">
+  <div class="mo-box">
+    <div class="mo-hd"><div class="mo-title">Edit Staff Account</div><button class="close-x" onclick="closeMo('mo-edit-user')">✕</button></div>
+    <input type="hidden" id="eu-id"/>
+    <div class="fgrid">
+      <div class="fg full"><label>Full Name *</label><input id="eu-fname" placeholder="Staff full name"/></div>
+      <div class="fg"><label>Phone</label><input id="eu-phone" placeholder="0712345678"/></div>
+      <div class="fg"><label>Role *</label>
+        <select id="eu-role">
+          <option value="cashier">Cashier</option>
+          <option value="pharmacist">Pharmacist</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <div class="fg full"><label>Status</label>
+        <select id="eu-active">
+          <option value="true">Active</option>
+          <option value="false">Inactive</option>
+        </select>
+      </div>
+    </div>
+    <div class="btn-row"><button class="btn btn-ghost" onclick="closeMo('mo-edit-user')">Cancel</button><button class="btn btn-primary" onclick="saveEditUser()">Save Changes</button></div>
+  </div>
+</div>
+
+<!-- Reset Password -->
+<div class="mo" id="mo-reset-password">
+  <div class="mo-box">
+    <div class="mo-hd"><div class="mo-title">Reset Password</div><button class="close-x" onclick="closeMo('mo-reset-password')">✕</button></div>
+    <input type="hidden" id="rp-id"/>
+    <div class="fg full" style="margin-bottom:10px">
+      <label>Staff Member</label>
+      <div id="rp-name-label" style="padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);font-weight:600"></div>
+    </div>
+    <div class="fg full"><label>New Password *</label>
+      <div style="position:relative">
+        <input type="password" id="rp-pass" placeholder="Min 8 characters" style="padding-right:40px;width:100%;box-sizing:border-box"/>
+        <button type="button" onclick="togglePw('rp-pass',this)" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:15px;padding:4px;color:var(--text3)">👁</button>
+      </div>
+    </div>
+    <div class="btn-row"><button class="btn btn-ghost" onclick="closeMo('mo-reset-password')">Cancel</button><button class="btn btn-primary" onclick="saveResetPassword()">Reset Password</button></div>
+  </div>
+</div>
+
+<!-- M-Pesa Payment Modal -->
+<div class="mo mpesa-modal" id="mo-mpesa">
+  <div class="mo-box">
+    <div class="mo-hd">
+      <div class="mo-title">📱 M-Pesa Payment</div>
+      <button class="close-x" onclick="closeMo('mo-mpesa')">✕</button>
+    </div>
+
+    <!-- Step 1: Enter phone -->
+    <div class="mpesa-step visible" id="mp-step1">
+      <div style="background:var(--emerald-dim);border:1px solid rgba(16,185,129,.2);border-radius:var(--r);padding:14px;margin-bottom:16px;text-align:center">
+        <div style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Amount to Pay</div>
+        <div style="font-family:var(--fm);font-size:26px;font-weight:700;color:var(--emerald)" id="mp-amount">KES 0.00</div>
+      </div>
+      <div class="fg" style="margin-bottom:16px">
+        <label>Customer M-Pesa Phone Number</label>
+        <input id="mp-phone" placeholder="07XXXXXXXX or 2547XXXXXXXX" type="tel"/>
+        <div style="font-size:11px;color:var(--text2);margin-top:4px">Customer will receive a prompt on their phone to enter PIN</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="closeMo('mo-mpesa')">Cancel</button>
+        <button class="btn btn-primary" onclick="initMpesa()">Send STK Push →</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Waiting -->
+    <div class="mpesa-step" id="mp-step2">
+      <div class="mpesa-status">
+        <div class="mpesa-pulse">📱</div>
+        <div style="font-size:16px;font-weight:700;margin-bottom:6px">Waiting for Payment</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:16px" id="mp-wait-msg">
+          Payment prompt sent to <strong id="mp-sent-to">customer</strong>.<br/>
+          Ask them to enter their M-Pesa PIN.
+        </div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px">
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--amber);animation:pulse 1s infinite"></div>
+          <span style="font-size:12px;color:var(--text2)">Checking payment status...</span>
+        </div>
+        <div style="background:var(--bg3);border-radius:var(--r2);padding:10px 14px;font-size:12px;color:var(--text2)">
+          ⏱ Customer has <span id="mp-countdown" style="font-weight:700;color:var(--amber)">60</span>s to respond
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-danger" onclick="cancelMpesa()">Cancel Payment</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Success -->
+    <div class="mpesa-step" id="mp-step3">
+      <div class="mpesa-status">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--emerald-dim);border:2px solid var(--emerald);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px">✅</div>
+        <div style="font-size:18px;font-weight:800;color:var(--emerald);margin-bottom:4px">Payment Received!</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Transaction completed successfully</div>
+        <div class="mpesa-receipt">
+          <div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">M-Pesa Receipt</div>
+          <div class="receipt-code" id="mp-receipt-code">—</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:6px" id="mp-receipt-amt">KES 0.00</div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="completeMpesaSale()">Complete Sale →</button>
+      </div>
+    </div>
+
+    <!-- Step 4: Failed -->
+    <div class="mpesa-step" id="mp-step4">
+      <div class="mpesa-status">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--rose-dim);border:2px solid var(--rose);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px">❌</div>
+        <div style="font-size:16px;font-weight:700;color:var(--rose);margin-bottom:6px">Payment Failed</div>
+        <div style="font-size:13px;color:var(--text2)" id="mp-fail-reason">Customer cancelled or entered wrong PIN.</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="resetMpesa()">Try Again</button>
+        <button class="btn btn-ghost" onclick="closeMo('mo-mpesa')">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+// ══════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════
+const API = '';
+
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+let token = localStorage.getItem('pos_token') || '';
+let me = JSON.parse(localStorage.getItem('pos_me') || 'null');
+
+const DEFAULT_MED_CATEGORIES = [
+  'Analgesics','Antibiotics','Antihistamines','Antacids & GI','Cardiovascular',
+  'Diabetes','Respiratory','Vitamins & Supplements','Dermatology','First Aid',
+  'Contraceptives','Antiseptics','Cough & Cold','ENT','Ophthalmic','Pediatric',
+  'Baby Care','Cosmetics & Personal Care','Sanitary & Hygiene','Medical Supplies','Other'
+];
+
+// ══════════════════════════════════════════════
+// OFFLINE SUPPORT
+// ══════════════════════════════════════════════
+let isOnline = navigator.onLine;
+let offlineSalesQueue = JSON.parse(localStorage.getItem('pos_offline_sales') || '[]');
+let offlineFailedSales = JSON.parse(localStorage.getItem('pos_offline_failed_sales') || '[]');
+let offlineMedCache = JSON.parse(localStorage.getItem('pos_offline_med_cache') || '[]');
+let cart = [];
+let payMethod = 'cash';
+let custId = null, custName = null;
+let allMeds = [], allSales = [], allCustomers = [], allSuppliers = [], allUsers = [];
+let curPage = 'dashboard';
+let alertsResolved = false;
+let mpesaCheckoutId = null, mpesaPollTimer = null, mpesaCountdown = 60;
+
+// ══════════════════════════════════════════════
+// ROLE HELPERS
+// ══════════════════════════════════════════════
+function isAdmin() { return me && me.role === 'admin'; }
+function isAdminOrPharm() { return me && (me.role === 'admin' || me.role === 'pharmacist'); }
+
+// ══════════════════════════════════════════════
+// PASSWORD VISIBILITY TOGGLE
+// ══════════════════════════════════════════════
+function togglePw(id, btn) {
+  const input = document.getElementById(id);
+  const showing = input.type === 'text';
+  input.type = showing ? 'password' : 'text';
+  btn.textContent = showing ? '👁' : '🙈';
+}
+
+// ══════════════════════════════════════════════
+// FORGOT PASSWORD
+// ══════════════════════════════════════════════
+let fpEmail = '';
+function openForgotPassword() {
+  document.getElementById('fp-step1').style.display = 'block';
+  document.getElementById('fp-step2').style.display = 'none';
+  document.getElementById('fp-email').value = '';
+  document.getElementById('fp-code').value = '';
+  document.getElementById('fp-newpass').value = '';
+  openMo('mo-forgot-password');
+}
+function backToForgotStep1() {
+  document.getElementById('fp-step1').style.display = 'block';
+  document.getElementById('fp-step2').style.display = 'none';
+}
+async function sendResetCode() {
+  const email = document.getElementById('fp-email').value.trim();
+  if (!email.includes('@')) { toast('Enter a valid email','error'); return; }
+  fpEmail = email;
+  try {
+    await req('POST', '/auth/forgot-password', { email });
+    toast('If that email exists, a reset code has been sent','success',6000);
+    document.getElementById('fp-step1').style.display = 'none';
+    document.getElementById('fp-step2').style.display = 'block';
+  } catch(e) { toast(e.message,'error'); }
+}
+async function submitResetCode() {
+  const code = document.getElementById('fp-code').value.trim();
+  const newPass = document.getElementById('fp-newpass').value;
+  if (!code || code.length !== 6) { toast('Enter the 6-digit code','error'); return; }
+  if (!newPass || newPass.length < 8) { toast('Password must be at least 8 characters','error'); return; }
+  try {
+    await req('POST', '/auth/reset-password', { email: fpEmail, code, new_password: newPass });
+    toast('Password reset! You can now sign in.','success',6000);
+    closeMo('mo-forgot-password');
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// ══════════════════════════════════════════════
+// API
+// ══════════════════════════════════════════════
+async function req(method, path, body) {
+  const opts = {
+    method,
+    headers: {'Content-Type':'application/json','Authorization':`Bearer ${token}`}
+  };
+  if (body) opts.body = JSON.stringify(body);
+  let r;
+  try {
+    r = await fetch(API + path, opts);
+  } catch(e) {
+    const offlineErr = new Error('You appear to be offline. Check your connection and try again.');
+    offlineErr.isOffline = true;
+    throw offlineErr;
+  }
+  if (r.status === 401) {
+    toast('Session expired. Please sign in again.', 'error', 6000);
+    localStorage.removeItem('pos_token');
+    localStorage.removeItem('pos_me');
+    token = '';
+    me = null;
+    document.getElementById('login-screen').style.display = 'flex';
+    return null;
+  }
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    const msg = d.message || d.detail || `Error ${r.status}`;
+    throw new Error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+  }
+
+  return d;
+}
+
+// ══════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════
+function toast(msg, type='info', ms=4000) {
+  const w = document.getElementById('toasts');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  const ic = {success:'✅',error:'❌',info:'ℹ️',warn:'⚠️'};
+  t.innerHTML = `<span>${ic[type]||'ℹ️'}</span><span>${msg}</span>`;
+  w.appendChild(t);
+  setTimeout(() => t.style.opacity='0', ms - 400);
+  setTimeout(() => t.remove(), ms);
+}
+
+// ══════════════════════════════════════════════
+// THEME
+// ══════════════════════════════════════════════
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('pos_theme', next);
+  document.getElementById('theme-btn').textContent = next === 'dark' ? '🌙' : '☀️';
+}
+(function(){
+  const saved = localStorage.getItem('pos_theme');
+  if (saved) {
+    document.documentElement.setAttribute('data-theme', saved);
+    document.getElementById('theme-btn').textContent = saved === 'dark' ? '🌙' : '☀️';
+  }
+})();
+
+// ══════════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════════
+async function doLogin() {
+  const email = document.getElementById('li-email').value.trim();
+  const pass = document.getElementById('li-pass').value;
+  if (!email || !pass) { toast('Enter email and password', 'error'); return; }
+  try {
+    const d = await req('POST', '/auth/login', {email, password: pass});
+    token = d.access_token;
+    localStorage.setItem('pos_token', token);
+    me = await req('GET', '/auth/me');
+    localStorage.setItem('pos_me', JSON.stringify(me));
+    initUI();
+    toast(`Welcome back, ${me.full_name}! 👋`, 'success');
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+function initUI() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('u-avatar').textContent = (me.full_name || 'A')[0].toUpperCase();
+  document.getElementById('u-name').textContent = me.full_name;
+  document.getElementById('u-role').textContent = me.role;
+  applyRoleVisibility();
+  loadDashboard();
+  loadCategoriesIntoDatalists();
+  updateOnlineStatus();
+  refreshOfflineMedCache();
+  if (isOnline) syncOfflineQueue();
+  // Periodically check alert count and refresh the offline medicine cache
+  setInterval(updateAlertBadge, 60000);
+  setInterval(refreshOfflineMedCache, 10 * 60000); // every 10 minutes while online
+}
+
+function applyRoleVisibility() {
+  document.querySelectorAll('[data-roles]').forEach(el => {
+    const allowed = el.getAttribute('data-roles').split(',');
+    el.style.display = allowed.includes(me.role) ? '' : 'none';
+  });
+}
+
+function logout() {
+  token = ''; me = null;
+  localStorage.removeItem('pos_token');
+  localStorage.removeItem('pos_me');
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+// check token isn't expired before auto-restoring session
+if (token && me) {
+  try {
+    // Decode JWT payload to check expiry
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const expiresAt = payload.exp * 1000; // convert to ms
+    const minutesLeft = Math.round((expiresAt - Date.now()) / 60000);
+
+    if (Date.now() < expiresAt) {
+      // Token still valid — restore session
+      initUI();
+      if (minutesLeft < 30) {
+        toast(`Session expires in ${minutesLeft} minutes`, 'warn', 5000);
+      }
+    } else {
+      // Token expired — clear and show login
+      localStorage.removeItem('pos_token');
+      localStorage.removeItem('pos_me');
+      toast('Your session expired. Please sign in again.', 'info');
+    }
+  } catch(e) {
+    // Can't decode token — clear and show login
+    localStorage.removeItem('pos_token');
+    localStorage.removeItem('pos_me');
+  }
+}
+
+// ── Register service worker so the app shell can load even with no
+//    internet, once it's been successfully visited at least once. ──
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+
+updateOnlineStatus(); // reflect current connection state immediately, even pre-login
+
+window.addEventListener('online', () => { isOnline = true; updateOnlineStatus(); syncOfflineQueue(); });
+window.addEventListener('offline', () => { isOnline = false; updateOnlineStatus(); });
+
+function updateOnlineStatus() {
+  const banner = document.getElementById('offline-banner');
+  banner.style.display = isOnline ? 'none' : 'flex';
+  document.querySelectorAll('.pay-opt[onclick*="mpesa"]').forEach(el => {
+    el.style.opacity = isOnline ? '1' : '0.4';
+    el.style.pointerEvents = isOnline ? '' : 'none';
+    el.title = isOnline ? '' : 'M-Pesa requires an internet connection';
+  });
+  updateOfflineQueueBadge();
+}
+
+function updateOfflineQueueBadge() {
+  const badge = document.getElementById('offline-queue-count');
+  const total = offlineSalesQueue.length + offlineFailedSales.length;
+  if (total > 0) {
+    badge.style.display = 'inline-block';
+    badge.textContent = offlineFailedSales.length > 0
+      ? `${total} pending (${offlineFailedSales.length} need review)`
+      : `${total} pending`;
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+// ── Local medicine cache, refreshed while online, used as a fallback
+//    for POS search when the network is unreachable. ──
+async function refreshOfflineMedCache() {
+  if (!isOnline) return;
+  try {
+    const meds = await req('GET', '/medicines?limit=3000&is_active=true');
+    offlineMedCache = meds;
+    localStorage.setItem('pos_offline_med_cache', JSON.stringify(meds));
+  } catch(e) { /* silent — this is a background best-effort refresh */ }
+}
+
+// ── Offline sales queue: cash/card sales made while offline are saved
+//    here and replayed to the server once connection returns. ──
+function saveOfflineSalesQueue() {
+  localStorage.setItem('pos_offline_sales', JSON.stringify(offlineSalesQueue));
+  localStorage.setItem('pos_offline_failed_sales', JSON.stringify(offlineFailedSales));
+  updateOfflineQueueBadge();
+}
+
+async function syncOfflineQueue() {
+  if (!offlineSalesQueue.length || !isOnline) return;
+  const pending = offlineSalesQueue;
+  offlineSalesQueue = [];
+  let synced = 0;
+
+  for (const item of pending) {
+    try {
+      await req('POST', '/sales', item.payload);
+      synced++;
+    } catch(e) {
+      if (e.isOffline) {
+        offlineSalesQueue.push(item); // still offline — keep retrying automatically
+      } else {
+        // Server reached us but rejected it (e.g. stock changed while offline).
+        // Move to the failed list for manual review — don't retry forever.
+        item.error = e.message;
+        offlineFailedSales.push(item);
+      }
+    }
+  }
+  saveOfflineSalesQueue();
+
+  if (synced > 0) toast(`✅ ${synced} offline sale(s) synced`, 'success', 5000);
+  if (offlineFailedSales.length > 0) {
+    toast(`⚠️ ${offlineFailedSales.length} offline sale(s) were rejected by the server — open the offline queue to review.`, 'error', 9000);
+  }
+}
+
+function openOfflineQueueModal() {
+  renderOfflineQueueModal();
+  openMo('mo-offline-queue');
+}
+
+function renderOfflineQueueModal() {
+  const box = document.getElementById('offline-queue-list');
+  const items = [
+    ...offlineSalesQueue.map(i => ({...i, status: 'pending'})),
+    ...offlineFailedSales.map(i => ({...i, status: 'failed'})),
+  ];
+  if (!items.length) {
+    box.innerHTML = '<p style="color:var(--text3);text-align:center;padding:20px">No offline sales queued.</p>';
+    return;
+  }
+  box.innerHTML = items.map(item => `
+    <div style="border:1px solid var(--border);border-radius:var(--r2);padding:10px 12px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-family:var(--fm);font-size:12px;color:var(--text2)">${item.id}</span>
+        <span class="badge ${item.status==='failed'?'b-red':'b-amber'}">${item.status==='failed'?'Needs review':'Waiting to sync'}</span>
+      </div>
+      <div style="font-size:13px">${item.payload.items.length} item(s) · KES ${Number(item.total).toLocaleString()} · ${item.payload.payment_method}</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:2px">${new Date(item.timestamp).toLocaleString('en-KE')}</div>
+      ${item.error ? `<div style="font-size:11px;color:var(--rose);margin-top:4px">⚠️ ${item.error}</div>` : ''}
+      ${item.status==='failed' ? `
+        <div style="display:flex;gap:6px;margin-top:8px">
+          <button class="tb-btn" style="padding:4px 10px;font-size:11px" onclick="retryFailedSale('${item.id}')">↻ Retry</button>
+          <button class="tb-btn" style="padding:4px 10px;font-size:11px;color:var(--rose)" onclick="discardFailedSale('${item.id}')">✕ Discard</button>
+        </div>` : ''}
+    </div>`).join('');
+}
+
+function retryFailedSale(id) {
+  const idx = offlineFailedSales.findIndex(i => i.id === id);
+  if (idx === -1) return;
+  const [item] = offlineFailedSales.splice(idx, 1);
+  delete item.error;
+  offlineSalesQueue.push(item);
+  saveOfflineSalesQueue();
+  renderOfflineQueueModal();
+  if (isOnline) syncOfflineQueue();
+}
+
+function discardFailedSale(id) {
+  if (!confirm('Discard this offline sale permanently? This cannot be undone.')) return;
+  offlineFailedSales = offlineFailedSales.filter(i => i.id !== id);
+  saveOfflineSalesQueue();
+  renderOfflineQueueModal();
+}
+
+function queueOfflineSale(payload, total) {
+  const entry = {
+    id: 'OFFLINE-' + Date.now(),
+    payload,
+    total,
+    timestamp: new Date().toISOString(),
+  };
+  offlineSalesQueue.push(entry);
+  saveOfflineSalesQueue();
+  return entry.id;
+}
+
+// ══════════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════════
+const pages = {
+  dashboard:{ title:'Dashboard',      action:'+ New Sale',        load: loadDashboard },
+  pos:      { title:'Point of Sale',  action:'🗑 Clear Cart',     load: initPOS },
+  sales:    { title:'Sales History',  action:'+ New Sale',        load: loadSales },
+  medicines:{ title:'Medicines',      action:'+ Add Medicine',    load: loadMedicines },
+  inventory:{ title:'Stock',          action:'+ Receive Stock',   load: loadInventory },
+  suppliers:{ title:'Suppliers',      action:'+ Add Supplier',    load: loadSuppliers },
+  customers:{ title:'Customers',      action:'+ Register Patient',load: loadCustomers },
+  users:    { title:'Staff Accounts', action:'+ Add Staff',       load: loadUsers },
+  alerts:   { title:'Alerts',         action:'🔍 Scan Now',       load: loadAlerts },
+  reports:  { title:'Reports',        action:'📊 Generate',       load: initReports },
+};
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('mobile-open');
+  document.getElementById('sidebar-overlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  document.getElementById('sidebar-overlay').classList.remove('show');
+}
+
+function goPage(pg, btn) {
+  document.querySelectorAll('.page,.pos-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + pg)?.classList.add('active');
+  if (btn) btn.classList.add('active');
+  curPage = pg;
+  closeSidebar(); // auto-close the drawer on mobile after picking a page
+  const cfg = pages[pg];
+  if (cfg) {
+    document.getElementById('pg-title').textContent = cfg.title;
+    document.getElementById('tb-action').textContent = cfg.action;
+    document.getElementById('tb-action').style.display = (pg === 'medicines' && !isAdminOrPharm()) ? 'none' : '';
+    cfg.load();
+  }
+}
+
+function refreshPage() { pages[curPage]?.load(); toast('Refreshed', 'info', 1500); }
+
+function tbAction() {
+  const map = {
+    pos: () => { cart=[]; renderCart(); toast('Cart cleared', 'info', 1500); },
+    medicines: () => openMo('mo-add-med'),
+    inventory: () => openMo('mo-add-stock'),
+    suppliers: () => openMo('mo-add-supplier'),
+    customers: () => openMo('mo-add-customer'),
+    users:     () => openMo('mo-add-user'),
+    alerts:    () => scanAlerts(),
+    dashboard: () => goPage('pos', document.querySelector('[data-page=pos]')),
+    sales:     () => goPage('pos', document.querySelector('[data-page=pos]')),
+    reports:   () => loadReport(),
+  };
+  map[curPage]?.();
+}
+
+// ══════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════
+let revChart, payChart;
+async function loadDashboard() {
+  try {
+    const d = await req('GET', '/reports/dashboard');
+    document.getElementById('d-meds').textContent = d.active_medicines;
+    document.getElementById('d-rev').textContent = 'KES ' + Number(d.todays_revenue).toLocaleString();
+    document.getElementById('d-sales-ct').textContent = d.todays_sales_count;
+    document.getElementById('d-low').textContent = d.low_stock_count;
+    document.getElementById('d-alrt').textContent = d.unresolved_alerts;
+    document.getElementById('d-expiring').textContent = d.expiring_soon_count;
+    updateAlertBadge(d.unresolved_alerts);
+  } catch(e) { toast(e.message, 'error'); }
+
+  // Charts
+  buildRevenueChart();
+  buildPaymentChart();
+
+  // Recent sales
+  try {
+    const sales = await req('GET', '/sales?limit=6');
+    const el = document.getElementById('d-recent');
+    if (!sales.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🧾</div><p>No sales yet today</p></div>'; }
+    else el.innerHTML = '<div class="tbl-wrap"><table><thead><tr><th>Receipt</th><th>Total</th><th>Method</th><th>Status</th></tr></thead><tbody>' +
+      sales.map(s => `<tr>
+        <td class="mono td-strong">${s.receipt_number}</td>
+        <td class="td-strong">KES ${Number(s.total_amount).toLocaleString()}</td>
+        <td>${payBadge(s.payment_method)}</td>
+        <td>${statusBadge(s.status)}</td>
+      </tr>`).join('') + '</tbody></table></div>';
+  } catch(e){}
+
+  // Alerts
+  try {
+    const alerts = await req('GET', '/alerts?is_resolved=false');
+    const el = document.getElementById('d-alerts');
+    if (!alerts.length) el.innerHTML = '<div class="empty"><div class="empty-icon">✅</div><p>No active alerts</p></div>';
+    else el.innerHTML = alerts.slice(0,5).map(a => alertCard(a, false)).join('');
+  } catch(e){}
+
+  // Expiry heatmap
+  buildExpiryHeatmap();
+}
+
+async function buildRevenueChart() {
+  const ctx = document.getElementById('rev-chart');
+  if (!ctx) return;
+  if (typeof Chart === 'undefined') {
+    ctx.parentElement.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text3);font-size:12px;text-align:center;padding:20px">📉 Charts couldn\'t load — this needs cdn.jsdelivr.net, which seems unreachable from this network.</div>';
+    return;
+  }
+  if (revChart) revChart.destroy();
+
+  // Build 7-day labels
+  const labels = [], datasets = [];
+  const now = new Date();
+  for (let i=6; i>=0; i--) {
+    const d = new Date(now); d.setDate(d.getDate()-i);
+    labels.push(d.toLocaleDateString('en-KE',{weekday:'short'}));
+  }
+  // Try to get real data, fallback to zeros
+  let values = new Array(7).fill(0);
+  try {
+    const to = new Date(); to.setHours(23,59,59);
+    const from = new Date(); from.setDate(from.getDate()-6); from.setHours(0,0,0);
+    const d = await req('GET', `/reports/sales-summary?from_date=${from.toISOString()}&to_date=${to.toISOString()}`);
+    // We only have total — distribute evenly as placeholder
+    const perDay = Number(d.total_revenue) / 7;
+    values = new Array(7).fill(Math.round(perDay));
+  } catch(e){}
+
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  revChart = new Chart(ctx, {
+    type:'line',
+    data:{
+      labels,
+      datasets:[{
+        label:'Revenue (KES)',
+        data: values,
+        fill: true,
+        tension: 0.4,
+        borderColor:'#3b82f6',
+        backgroundColor:'rgba(59,130,246,0.08)',
+        pointBackgroundColor:'#3b82f6',
+        pointRadius:4,
+        borderWidth:2,
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>'KES '+v.raw.toLocaleString()}}},
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8b9cc8',font:{family:'Outfit',size:11}}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8b9cc8',font:{family:'Outfit',size:11},callback:v=>'KES '+v.toLocaleString()}}
+      }
+    }
+  });
+}
+
+async function buildPaymentChart() {
+  const ctx = document.getElementById('pay-chart');
+  if (!ctx) return;
+  if (typeof Chart === 'undefined') {
+    ctx.parentElement.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text3);font-size:12px;text-align:center;padding:20px">📊 Charts couldn\'t load — this needs cdn.jsdelivr.net, which seems unreachable from this network.</div>';
+    return;
+  }
+  if (payChart) payChart.destroy();
+  // Try to get breakdown, fallback to placeholder
+  let cash=1, mpesa=1, card=0;
+  try {
+    const sales = await req('GET', '/sales?limit=200');
+    const today = new Date().toDateString();
+    sales.filter(s=>new Date(s.sold_at).toDateString()===today && s.status==='completed')
+      .forEach(s=>{ if(s.payment_method==='cash') cash++; else if(s.payment_method==='mpesa') mpesa++; else card++; });
+  } catch(e){}
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  payChart = new Chart(ctx, {
+    type:'doughnut',
+    data:{
+      labels:['Cash','M-Pesa','Card'],
+      datasets:[{data:[cash,mpesa,card],backgroundColor:['#10b981','#3b82f6','#8b5cf6'],borderWidth:0,hoverOffset:4}]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      cutout:'72%',
+      plugins:{
+        legend:{position:'bottom',labels:{color:'#8b9cc8',font:{family:'Outfit',size:11},padding:12,usePointStyle:true,pointStyleWidth:8}},
+        tooltip:{callbacks:{label:v=>`${v.label}: ${v.raw} sales`}}
+      }
+    }
+  });
+}
+
+async function buildExpiryHeatmap() {
+  const el = document.getElementById('expiry-heatmap');
+  if (!el) return;
+  try {
+    const inv = await req('GET', '/inventory?limit=500');
+    if (!inv.length) { el.innerHTML = '<span style="color:var(--text3);font-size:12px">No inventory data</span>'; return; }
+    const now = new Date();
+    const soon = new Date(); soon.setDate(soon.getDate()+30);
+    el.innerHTML = inv.filter(i=>i.expires_at).map(i => {
+      const exp = new Date(i.expires_at);
+      const cls = exp < now ? 'hm-expired' : exp < soon ? 'hm-soon' : 'hm-ok';
+      const label = exp < now ? '⚠' : exp < soon ? '⏰' : '✓';
+      return `<div class="hm-item ${cls}" title="Batch ${i.batch_number||'?'} · Qty ${i.quantity} · Exp ${exp.toLocaleDateString()}">${label} Med #${i.medicine_id}</div>`;
+    }).slice(0,30).join('') || '<span style="color:var(--text3);font-size:12px">No expiry data</span>';
+  } catch(e) { el.innerHTML = '<span style="color:var(--text3);font-size:12px">Could not load</span>'; }
+}
+
+function updateAlertBadge(count) {
+  if (!token) return;
+  const b = document.getElementById('alert-badge');
+  if (count === undefined) req('GET','/alerts?is_resolved=false').then(a=>updateAlertBadge(a.length)).catch(()=>{});
+  else { b.textContent = count; b.style.display = count > 0 ? 'inline-flex' : 'none'; }
+}
+
+// ══════════════════════════════════════════════
+// POS
+// ══════════════════════════════════════════════
+function initPOS() {
+  document.getElementById('med-q').value = '';
+  document.getElementById('meds-grid').innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="empty-icon">💊</div><p>Search for medicines above</p></div>';
+}
+
+async function searchMeds() {
+  const q = document.getElementById('med-q').value.trim();
+  const grid = document.getElementById('meds-grid');
+  if (!q) { initPOS(); return; }
+
+  if (!isOnline) {
+    renderMedResults(filterOfflineMedCache(q), grid, true);
+    return;
+  }
+
+  try {
+    const meds = await req('GET', `/medicines?q=${encodeURIComponent(q)}&limit=15`);
+    renderMedResults(meds, grid, false);
+  } catch(e) {
+    if (e.isOffline) {
+      renderMedResults(filterOfflineMedCache(q), grid, true);
+    } else {
+      toast(e.message, 'error');
+    }
+  }
+}
+
+function filterOfflineMedCache(q) {
+  const ql = q.toLowerCase();
+  return offlineMedCache.filter(m =>
+    m.name.toLowerCase().includes(ql) || (m.generic_name||'').toLowerCase().includes(ql)
+  ).slice(0, 15);
+}
+
+function renderMedResults(meds, grid, fromCache) {
+  if (!meds.length) {
+    const q = document.getElementById('med-q').value.trim();
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🔍</div><p>No medicines found for "${q}"${fromCache ? ' in offline cache' : ''}</p></div>`;
+    return;
+  }
+  // MedicineSearchOut fields: id, name, generic_name, dosage_form, strength,
+  // unit_price, requires_prescription — no stock_qty (that lives on Inventory).
+  // We stringify name safely to avoid quote-breaking the onclick attribute.
+  grid.innerHTML = (fromCache ? '<div style="grid-column:1/-1;font-size:11px;color:var(--amber);margin-bottom:2px">📴 Showing offline cached results — prices/stock may be out of date</div>' : '') + meds.map(m => {
+    const price = Number(m.unit_price);
+    const safeName = m.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const rxTag = m.requires_prescription
+      ? '<div class="med-rx-tag" style="background:var(--amber-dim);color:var(--amber)">Rx</div>'
+      : '<div class="med-rx-tag" style="background:var(--emerald-dim);color:var(--emerald)">OTC</div>';
+    return `
+    <div class="med-card" onclick="addCart(${m.id},'${safeName}',${price},${m.requires_prescription})">
+      ${rxTag}
+      <div class="med-name">${m.name}</div>
+      <div class="med-generic">${m.generic_name || ''}${m.strength ? ' · ' + m.strength : ''}</div>
+      <div class="med-foot">
+        <div class="med-price">KES ${price.toLocaleString()}</div>
+        <div style="font-size:10px;color:var(--text3)">${m.dosage_form || ''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function addCart(id, name, price, rx) {
+  const ex = cart.find(i=>i.id===id);
+  if (ex) ex.qty++;
+  else cart.push({id, name, price:Number(price), qty:1, rx});
+  renderCart();
+  toast(name + ' added to cart', 'success', 1200);
+}
+
+function renderCart() {
+  const el = document.getElementById('cart-body');
+  const cnt = cart.reduce((s,i)=>s+i.qty,0);
+  document.getElementById('cart-cnt').textContent = cnt;
+  document.getElementById('checkout-btn').disabled = !cart.length;
+  if (!cart.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🛒</div><p>Cart is empty</p></div>'; updateTotals(); return; }
+  el.innerHTML = cart.map((item,i) => `
+    <div class="cart-item">
+      <div class="ci-info">
+        <div class="ci-name">${item.name}</div>
+        <div class="ci-price">KES ${item.price.toLocaleString()} × ${item.qty}</div>
+      </div>
+      <div class="qty-ctl">
+        <button class="qty-btn" onclick="chgQty(${i},-1)">−</button>
+        <span style="font-size:13px;font-weight:700;min-width:18px;text-align:center">${item.qty}</span>
+        <button class="qty-btn" onclick="chgQty(${i},1)">+</button>
+      </div>
+      <div class="ci-total">KES ${(item.price*item.qty).toLocaleString()}</div>
+    </div>`).join('');
+  updateTotals();
+}
+
+function chgQty(i, d) { cart[i].qty += d; if(cart[i].qty<=0) cart.splice(i,1); renderCart(); }
+
+function updateTotals() {
+  const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
+
+  document.getElementById('c-sub').textContent = 'KES ' + total.toFixed(2);
+  document.getElementById('c-total').textContent = 'KES ' + total.toFixed(2);;
+}
+
+function selPay(m, btn) {
+  payMethod = m;
+  document.querySelectorAll('.pay-opt').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+
+async function doSale() {
+  if (!cart.length) { toast('Cart is empty','error'); return; }
+  const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
+
+  if (payMethod === 'mpesa') {
+    if (!isOnline) {
+      toast('M-Pesa requires an internet connection. Choose Cash or Card while offline.', 'error', 6000);
+      return;
+    }
+    // Open M-Pesa flow
+    document.getElementById('mp-amount').textContent = 'KES ' + total.toFixed(2);
+    if (custName) document.getElementById('mp-phone').value = '';
+    openMo('mo-mpesa');
+    return;
+  }
+
+  await submitSale(payMethod, total, null);
+}
+
+async function submitSale(method, total, mpesaReceipt) {
+  const payload = {
+    items: cart.map(i=>({medicine_id:i.id, quantity:i.qty, discount_pct:0})),
+    payment_method: method,
+    amount_paid: parseFloat(total.toFixed(2)),
+    customer_id: custId || null,
+    mpesa_receipt: mpesaReceipt || null,
+  };
+
+  if (!isOnline && method === 'mpesa') {
+    toast('M-Pesa requires an internet connection. Choose Cash or Card instead, or wait until you\'re back online.', 'error', 7000);
+    return;
+  }
+
+  try {
+    const sale = await req('POST', '/sales', payload);
+    toast(`✅ Sale ${sale.receipt_number} — KES ${Number(sale.total_amount).toLocaleString()}`, 'success', 6000);
+    cart = []; renderCart();
+    custId = null; custName = null;
+    document.getElementById('cust-label').textContent = 'Walk-in';
+  } catch(e) {
+    if (e.isOffline && method !== 'mpesa') {
+      // Offline fallback: save the sale locally, sync automatically once back online.
+      const offlineId = queueOfflineSale(payload, total);
+      toast(`📴 Offline — sale saved locally (${offlineId}) and will sync automatically`, 'info', 7000);
+      cart = []; renderCart();
+      custId = null; custName = null;
+      document.getElementById('cust-label').textContent = 'Walk-in';
+    } else {
+      toast(e.message, 'error', 7000);
+    }
+  }
+}
+
+// ══════════════════════════════════════════════
+// M-PESA FLOW
+// ══════════════════════════════════════════════
+function resetMpesa() {
+  ['mp-step1','mp-step2','mp-step3','mp-step4'].forEach(s=>document.getElementById(s).classList.remove('visible'));
+  document.getElementById('mp-step1').classList.add('visible');
+  if (mpesaPollTimer) clearInterval(mpesaPollTimer);
+  mpesaCheckoutId = null; mpesaCountdown = 60;
+}
+
+async function initMpesa() {
+  const phone = document.getElementById('mp-phone').value.trim();
+  if (!phone) { toast('Enter customer phone number', 'error'); return; }
+  const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
+  const saleId = 0; // Will be created after payment confirmed
+
+  // Show waiting step
+  document.getElementById('mp-step1').classList.remove('visible');
+  document.getElementById('mp-step2').classList.add('visible');
+  document.getElementById('mp-sent-to').textContent = phone;
+
+  // Countdown
+  mpesaCountdown = 60;
+  const cdEl = document.getElementById('mp-countdown');
+  const cdTimer = setInterval(() => {
+    mpesaCountdown--;
+    cdEl.textContent = mpesaCountdown;
+    if (mpesaCountdown <= 0) { clearInterval(cdTimer); mpesaTimeout(); }
+  }, 1000);
+
+  try {
+    // In real integration, you'd call /payments/mpesa/stk-push here
+    // For now simulate with a mock checkout ID
+    // const r = await req('POST', '/payments/mpesa/stk-push', { sale_id: saleId, phone_number: phone });
+    // mpesaCheckoutId = r.checkout_request_id;
+    // pollMpesaStatus(mpesaCheckoutId, cdTimer, total);
+
+    // DEMO MODE: simulate success after 4 seconds
+    setTimeout(() => {
+      clearInterval(cdTimer);
+      const fakeReceipt = 'QJ' + Math.random().toString(36).substr(2,8).toUpperCase();
+      document.getElementById('mp-step2').classList.remove('visible');
+      document.getElementById('mp-step3').classList.add('visible');
+      document.getElementById('mp-receipt-code').textContent = fakeReceipt;
+      document.getElementById('mp-receipt-amt').textContent = 'KES ' + total.toFixed(2);
+      mpesaCheckoutId = fakeReceipt;
+    }, 4000);
+
+  } catch(e) {
+    clearInterval(cdTimer);
+    document.getElementById('mp-step2').classList.remove('visible');
+    document.getElementById('mp-step4').classList.add('visible');
+    document.getElementById('mp-fail-reason').textContent = e.message;
+  }
+}
+
+function pollMpesaStatus(checkoutId, cdTimer, total) {
+  mpesaPollTimer = setInterval(async () => {
+    try {
+      const r = await req('GET', `/payments/mpesa/${checkoutId}/status`);
+      if (r.status === 'SUCCESS') {
+        clearInterval(mpesaPollTimer); clearInterval(cdTimer);
+        document.getElementById('mp-step2').classList.remove('visible');
+        document.getElementById('mp-step3').classList.add('visible');
+        document.getElementById('mp-receipt-code').textContent = r.mpesa_receipt || '—';
+        document.getElementById('mp-receipt-amt').textContent = 'KES ' + total.toFixed(2);
+        mpesaCheckoutId = r.mpesa_receipt;
+      } else if (r.status === 'FAILED') {
+        clearInterval(mpesaPollTimer); clearInterval(cdTimer);
+        document.getElementById('mp-step2').classList.remove('visible');
+        document.getElementById('mp-step4').classList.add('visible');
+        document.getElementById('mp-fail-reason').textContent = r.result_desc || 'Payment failed';
+      }
+    } catch(e){}
+  }, 3000);
+}
+
+function mpesaTimeout() {
+  document.getElementById('mp-step2').classList.remove('visible');
+  document.getElementById('mp-step4').classList.add('visible');
+  document.getElementById('mp-fail-reason').textContent = 'Payment timed out — customer did not respond in 60 seconds.';
+}
+
+function cancelMpesa() { if(mpesaPollTimer) clearInterval(mpesaPollTimer); resetMpesa(); closeMo('mo-mpesa'); }
+
+async function completeMpesaSale() {
+  const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
+  closeMo('mo-mpesa');
+  await submitSale('mpesa', total, mpesaCheckoutId);
+  resetMpesa();
+}
+
+// ══════════════════════════════════════════════
+// SALES
+// ══════════════════════════════════════════════
+async function loadSales() {
+  try {
+    allSales = await req('GET', '/sales?limit=100');
+    renderSales(allSales);
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+function renderSales(data) {
+  const tb = document.getElementById('sales-tb');
+  const status = document.getElementById('sales-status-filter').value;
+  const filtered = data.filter(s => !status || s.status === status);
+  if (!filtered.length) { tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text3)">No sales found</td></tr>'; return; }
+  tb.innerHTML = filtered.map(s => `<tr>
+    <td class="mono td-strong">${s.receipt_number}</td>
+    <td>${new Date(s.sold_at).toLocaleString('en-KE')}</td>
+    <td>${s.customer_id ? '👤 #'+s.customer_id : '<span style="color:var(--text3)">Walk-in</span>'}</td>
+    <td>${s.items?.length||0} item${(s.items?.length||0)===1?'':'s'}</td>
+    <td class="td-strong mono">KES ${Number(s.total_amount).toLocaleString()}</td>
+    <td>${payBadge(s.payment_method)}</td>
+    <td>${statusBadge(s.status)}</td>
+  </tr>`).join('');
+}
+
+function filterSales() {
+  const q      = document.getElementById('sales-q').value.toLowerCase().trim();
+  const status = document.getElementById('sales-status-filter').value;
+  const filtered = allSales.filter(s => {
+    const matchText   = !q      || s.receipt_number.toLowerCase().includes(q);
+    const matchStatus = !status || s.status === status;
+    return matchText && matchStatus;
+  });
+  const tb = document.getElementById('sales-tb');
+  if (!filtered.length) {
+    tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text3)">No sales match your search</td></tr>';
+    return;
+  }
+  tb.innerHTML = filtered.map(s => `<tr>
+    <td class="mono td-strong">${s.receipt_number}</td>
+    <td>${new Date(s.sold_at).toLocaleString('en-KE')}</td>
+    <td>${s.customer_id ? '👤 #'+s.customer_id : '<span style="color:var(--text3)">Walk-in</span>'}</td>
+    <td>${s.items?.length||0} item${(s.items?.length||0)===1?'':'s'}</td>
+    <td class="td-strong mono">KES ${Number(s.total_amount).toLocaleString()}</td>
+    <td>${payBadge(s.payment_method)}</td>
+    <td>${statusBadge(s.status)}</td>
+  </tr>`).join('');
+}
+
+// ══════════════════════════════════════════════
+// MEDICINES
+// ══════════════════════════════════════════════
+async function loadMedicines() {
+  try {
+    const [active, inactive] = await Promise.all([
+      req('GET', '/medicines?limit=300&is_active=true'),
+      req('GET', '/medicines?limit=300&is_active=false'),
+    ]);
+    allMeds = [...active, ...inactive];
+    populateCategoryFilterDropdown();
+    filterMeds();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+function populateCategoryFilterDropdown() {
+  const sel = document.getElementById('med-category-filter');
+  const current = sel.value;
+  const cats = [...new Set(allMeds.map(m => m.category).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">All Categories</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+  if (cats.includes(current)) sel.value = current;
+}
+
+function renderMeds(data) {
+  const tb = document.getElementById('meds-tb');
+  if (!data.length) { tb.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text3)">No items match. Try "Sync PPB Register" or add manually.</td></tr>'; return; }
+  const canEdit = isAdminOrPharm();
+  tb.innerHTML = data.map(m => `<tr>
+    <td class="td-strong">${m.name}${m.strength?` <span style="color:var(--text3);font-weight:500">${m.strength}</span>`:''}</td>
+    <td>${m.category ? `<span class="badge b-blue">${m.category}</span>` : '<span style="color:var(--text3)">—</span>'}</td>
+    <td>${m.generic_name||'—'}</td>
+    <td>${m.dosage_form||'—'}</td>
+    <td class="td-strong mono">KES ${Number(m.unit_price).toLocaleString()}</td>
+    <td>${m.item_type==='non_medical' ? '<span class="badge b-violet">🧴 Product</span>' : '<span class="badge b-gray">💊 Medicine</span>'}</td>
+    <td>${m.item_type==='non_medical' ? '—' : (m.requires_prescription?'<span class="badge b-amber">Rx</span>':'<span class="badge b-green">OTC</span>')}</td>
+    <td>${m.is_active===false?'<span class="badge b-red">Inactive</span>':'<span class="badge b-green">Active</span>'}</td>
+    <td>${canEdit ? `
+      <div style="display:flex;gap:6px">
+        <button class="tb-btn" style="padding:4px 8px;font-size:11px" onclick="openEditMed(${m.id})">✏️ Edit</button>
+        ${isAdmin() ? (m.is_active===false
+          ? `<button class="tb-btn" style="padding:4px 8px;font-size:11px;color:var(--emerald)" onclick="reactivateMedicine(${m.id})">↺ Restore</button>`
+          : `<button class="tb-btn" style="padding:4px 8px;font-size:11px;color:var(--rose)" onclick="deactivateMedicine(${m.id},'${m.name.replace(/'/g,"\\'")}')">🗑 Delete</button>`)
+        : ''}
+      </div>` : '—'}</td>
+  </tr>`).join('');
+}
+
+async function openEditMed(id) {
+  try {
+    const m = await req('GET', `/medicines/${id}`);
+    document.getElementById('em-id').value = m.id;
+    document.getElementById('em-name').value = m.name || '';
+    document.getElementById('em-itemtype').value = m.item_type || 'medicine';
+    document.getElementById('em-category').value = m.category || '';
+    document.getElementById('em-generic').value = m.generic_name || '';
+    document.getElementById('em-brand').value = m.brand_name || '';
+    document.getElementById('em-form').value = m.dosage_form || '';
+    document.getElementById('em-strength').value = m.strength || '';
+    document.getElementById('em-price').value = m.unit_price != null ? m.unit_price : '';
+    document.getElementById('em-reorder').value = m.reorder_level != null ? m.reorder_level : '';
+    document.getElementById('em-barcode').value = m.barcode || '';
+    document.getElementById('em-mfg').value = m.manufacturer || '';
+    document.getElementById('em-rx').value = m.requires_prescription ? 'true' : 'false';
+    document.getElementById('em-ctrl').value = m.is_controlled ? 'true' : 'false';
+    toggleMedTypeFields('em');
+    openMo('mo-edit-med');
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function saveEditMed() {
+  const id = document.getElementById('em-id').value;
+  const p = {
+    name: document.getElementById('em-name').value.trim(),
+    item_type: document.getElementById('em-itemtype').value,
+    category: document.getElementById('em-category').value.trim() || null,
+    generic_name: document.getElementById('em-generic').value.trim() || null,
+    brand_name: document.getElementById('em-brand').value.trim() || null,
+    dosage_form: document.getElementById('em-form').value.trim() || null,
+    strength: document.getElementById('em-strength').value.trim() || null,
+    unit_price: parseFloat(document.getElementById('em-price').value) || 0,
+    reorder_level: parseInt(document.getElementById('em-reorder').value) || 0,
+    barcode: document.getElementById('em-barcode').value.trim() || null,
+    manufacturer: document.getElementById('em-mfg').value.trim() || null,
+    requires_prescription: document.getElementById('em-rx').value === 'true',
+    is_controlled: document.getElementById('em-ctrl').value === 'true',
+  };
+  if (!p.name) { toast('Item name required','error'); return; }
+  try {
+    await req('PATCH', `/medicines/${id}`, p);
+    toast('Item updated','success'); closeMo('mo-edit-med'); loadMedicines();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function deactivateMedicine(id, name) {
+  if (!confirm(`Delete "${name}"? It's removed from the catalogue and POS, but sales history is kept for your records. You can restore it later from here.`)) return;
+  try {
+    await req('DELETE', `/medicines/${id}`);
+    toast('Item deleted','success'); loadMedicines();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function reactivateMedicine(id) {
+  try {
+    await req('PATCH', `/medicines/${id}`, { is_active: true });
+    toast('Item restored','success'); loadMedicines();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+let medTypeFilter = '';
+function setMedTypeFilter(type, btn) {
+  medTypeFilter = type;
+  document.querySelectorAll('#med-type-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterMeds();
+}
+
+function filterMeds() {
+  const q = document.getElementById('med-search').value.toLowerCase();
+  const cat = document.getElementById('med-category-filter').value;
+  const filtered = allMeds.filter(m => {
+    if (medTypeFilter && m.item_type !== medTypeFilter) return false;
+    if (cat && m.category !== cat) return false;
+    if (q && !m.name.toLowerCase().includes(q) && !(m.generic_name||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  renderMeds(filtered);
+}
+
+// ── Categories & item type helpers ──────────────────────────────────
+async function loadCategoriesIntoDatalists() {
+  let cats = [...DEFAULT_MED_CATEGORIES];
+  try {
+    const fromDb = await req('GET', '/medicines/meta/categories');
+    fromDb.forEach(c => { if (!cats.includes(c)) cats.push(c); });
+  } catch(e) {}
+  const dl = document.getElementById('med-categories-list');
+  if (dl) dl.innerHTML = cats.sort().map(c => `<option value="${c}">`).join('');
+}
+
+function toggleMedTypeFields(prefix) {
+  const type = document.getElementById(`${prefix}-itemtype`).value;
+  const isNonMedical = type === 'non_medical';
+  document.querySelectorAll('.med-only-field').forEach(el => {
+    // Only affects fields inside the modal currently being edited
+    const modal = el.closest('.mo-box');
+    if (modal && modal.querySelector(`#${prefix}-itemtype`)) {
+      el.style.display = isNonMedical ? 'none' : '';
+    }
+  });
+}
+
+let medNameCheckTimer = null;
+function checkDuplicateMedName() {
+  clearTimeout(medNameCheckTimer);
+  const q = document.getElementById('m-name').value.trim();
+  const box = document.getElementById('m-name-suggest');
+  if (q.length < 2) { box.style.display = 'none'; return; }
+  medNameCheckTimer = setTimeout(async () => {
+    try {
+      const meds = await req('GET', `/medicines?q=${encodeURIComponent(q)}&limit=5`);
+      if (!meds.length) { box.style.display = 'none'; return; }
+      box.style.display = 'block';
+      box.innerHTML = `<div style="padding:8px 12px;font-size:11px;color:var(--amber);border-bottom:1px solid var(--border)">⚠️ Already in your catalogue — click to edit instead of creating a duplicate:</div>` +
+        meds.map(m => `
+        <div onclick="switchToEditFromAdd(${m.id})"
+          style="padding:9px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border)"
+          onmouseover="this.style.background='var(--bg4)'" onmouseout="this.style.background='transparent'">
+          <div style="font-weight:600">${m.name}</div>
+          <div style="font-size:11px;color:var(--text2)">${m.generic_name||''} ${m.strength||''} · KES ${Number(m.unit_price).toLocaleString()}</div>
+        </div>`).join('');
+    } catch(e) {}
+  }, 350);
+}
+
+async function switchToEditFromAdd(id) {
+  closeMo('mo-add-med');
+  document.getElementById('m-name-suggest').style.display = 'none';
+  await openEditMed(id);
+  toast('Opened existing item for editing instead of creating a duplicate','info',5000);
+}
+
+async function addMedicine() {
+  const p = {
+    name: document.getElementById('m-name').value.trim(),
+    item_type: document.getElementById('m-itemtype').value,
+    category: document.getElementById('m-category').value.trim() || null,
+    generic_name: document.getElementById('m-generic').value||null,
+    brand_name: document.getElementById('m-brand').value||null,
+    dosage_form: document.getElementById('m-form').value||null,
+    strength: document.getElementById('m-strength').value||null,
+    route: document.getElementById('m-route').value||null,
+    unit_price: parseFloat(document.getElementById('m-price').value)||0,
+    reorder_level: parseInt(document.getElementById('m-reorder').value)||10,
+    barcode: document.getElementById('m-barcode').value||null,
+    manufacturer: document.getElementById('m-mfg').value||null,
+    requires_prescription: document.getElementById('m-rx').value==='true',
+    is_controlled: document.getElementById('m-ctrl').value==='true',
+  };
+  if (!p.name) { toast('Item name required','error'); return; }
+  if (!p.unit_price) { toast('Unit price required','error'); return; }
+  try {
+    await req('POST', '/medicines', p);
+    toast('Item added','success'); closeMo('mo-add-med');
+    document.getElementById('m-name-suggest').style.display = 'none';
+    ['m-name','m-generic','m-brand','m-form','m-strength','m-route','m-price','m-reorder','m-barcode','m-mfg','m-category'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('m-itemtype').value = 'medicine';
+    document.getElementById('m-rx').value = 'false';
+    document.getElementById('m-ctrl').value = 'false';
+    toggleMedTypeFields('m');
+    loadMedicines();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+let bulkImportStop = false;
+let ppbRecordsTotal = null; // learned from the API's own recordsTotal, for a real progress %
+
+async function openBulkImportModal() {
+  bulkImportStop = false;
+  const savedSkip = parseInt(localStorage.getItem('pos_ppb_skip') || '0');
+  const savedCount = parseInt(localStorage.getItem('pos_ppb_total') || '0');
+  const note = document.getElementById('bi-resume-note');
+  if (savedSkip > 0) {
+    note.style.display = 'block';
+    note.textContent = `Resuming from a previous run: ${savedCount} medicines already imported so far. Starting again will continue from there, not from the beginning.`;
+  } else {
+    note.style.display = 'none';
+  }
+
+  // Reassure that this doesn't need to be repeated every login — the
+  // catalogue is already saved permanently; only new PPB entries get added.
+  const catNote = document.getElementById('bi-catalogue-note');
+  const total = (allMeds && allMeds.length) ? allMeds.length : 0;
+  catNote.textContent = total
+    ? `You already have ${total} medicine(s) in your catalogue. This won't need to run again — everything is saved permanently. Re-syncing only adds anything new from PPB since your last run.`
+    : `Once synced, your catalogue is saved permanently — you won't need to do this again at every login.`;
+
+  document.getElementById('bi-progress-box').style.display = 'none';
+  document.getElementById('bi-run-btn').style.display = '';
+  document.getElementById('bi-run-btn').textContent = savedSkip > 0 ? 'Resume Import' : 'Start Import';
+  document.getElementById('bi-stop-btn').style.display = 'none';
+  openMo('mo-bulk-import');
+}
+
+async function runBulkImport() {
+  bulkImportStop = false;
+  document.getElementById('bi-progress-box').style.display = 'block';
+  document.getElementById('bi-run-btn').style.display = 'none';
+  document.getElementById('bi-stop-btn').style.display = '';
+  document.getElementById('bi-close-btn').textContent = 'Close (keeps progress)';
+
+  let skip = parseInt(localStorage.getItem('pos_ppb_skip') || '0');
+  let totalImported = parseInt(localStorage.getItem('pos_ppb_total') || '0');
+  const batchSize = 300; // per backend call — bounded so requests don't hang forever
+  let exhausted = false;
+
+  const label = document.getElementById('bi-progress-label');
+  const countEl = document.getElementById('bi-progress-count');
+  const bar = document.getElementById('bi-progress-bar');
+  const detail = document.getElementById('bi-progress-detail');
+
+  while (!bulkImportStop && !exhausted) {
+    label.textContent = `Fetching batch (position ${skip.toLocaleString()})...`;
+    try {
+      const r = await req('POST', `/medicines/sync/ppb-bulk?target_count=${batchSize}&start_skip=${skip}`);
+      if (r.records_total) ppbRecordsTotal = r.records_total;
+      totalImported += r.imported;
+      skip = r.next_skip;
+      exhausted = r.exhausted;
+      localStorage.setItem('pos_ppb_skip', skip);
+      localStorage.setItem('pos_ppb_total', totalImported);
+
+      countEl.textContent = `${totalImported.toLocaleString()} imported`;
+      // Real progress % once we know the PPB register's actual size from its own response
+      const knownTotal = ppbRecordsTotal || 7500; // rough fallback until the API tells us
+      const pct = Math.min(96, Math.max(2, (skip / knownTotal) * 100));
+      bar.style.width = pct.toFixed(0) + '%';
+      detail.textContent = r.message;
+      label.textContent = exhausted ? 'Reached the end of the register' : 'Importing…';
+    } catch(e) {
+      detail.textContent = `⚠️ ${e.message} — you can retry, it will resume from here.`;
+      toast(e.message,'error');
+      break;
+    }
+  }
+
+  document.getElementById('bi-stop-btn').style.display = 'none';
+  document.getElementById('bi-run-btn').style.display = '';
+  document.getElementById('bi-run-btn').textContent = exhausted ? 'Import Complete' : 'Resume Import';
+  document.getElementById('bi-close-btn').textContent = 'Close';
+
+  if (exhausted) {
+    localStorage.removeItem('pos_ppb_skip');
+    localStorage.removeItem('pos_ppb_total');
+    label.textContent = '✅ Full PPB register import complete';
+    toast(`Import complete: ${totalImported.toLocaleString()} medicines total — saved permanently, no need to sync again`,'success',8000);
+  } else if (bulkImportStop) {
+    label.textContent = '⏸ Paused — click Resume to continue';
+    toast('Import paused. Resume anytime from this point.','info',5000);
+  }
+  loadMedicines();
+}
+
+function stopBulkImport() {
+  bulkImportStop = true;
+  document.getElementById('bi-progress-label').textContent = 'Stopping after current batch…';
+}
+
+// ══════════════════════════════════════════════
+// INVENTORY
+// ══════════════════════════════════════════════
+let medNameCache = {};
+async function resolveMedNames(ids) {
+  const missing = [...new Set(ids)].filter(id => !medNameCache[id]);
+  if (!missing.length) return;
+  try {
+    const results = await Promise.all(missing.map(id => req('GET', `/medicines/${id}`).catch(() => null)));
+    results.forEach(m => { if (m) medNameCache[m.id] = m.name; });
+  } catch(e) {}
+}
+
+let allInventory = [];
+async function loadInventory() {
+  try {
+    const data = await req('GET', '/inventory?limit=300');
+    allInventory = data;
+    await resolveMedNames(data.map(i => i.medicine_id));
+    const tb = document.getElementById('inv-tb');
+    if (!data.length) { tb.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text3)">No stock batches yet</td></tr>'; return; }
+    const now = new Date();
+    const soon = new Date(); soon.setDate(soon.getDate()+30);
+    const canEdit = isAdminOrPharm();
+    tb.innerHTML = data.map(i => {
+      const exp = i.expires_at ? new Date(i.expires_at) : null;
+      const expired = exp && exp < now;
+      const expiringSoon = exp && !expired && exp < soon;
+      let expBadge = exp ? `<span class="badge ${expired?'b-red':expiringSoon?'b-amber':'b-green'}">${exp.toLocaleDateString('en-KE')}</span>` : '—';
+      let qtyColor = i.quantity < 5 ? 'var(--rose)' : i.quantity < 20 ? 'var(--amber)' : 'var(--emerald)';
+      return `<tr>
+        <td class="td-strong">${medNameCache[i.medicine_id] || ('Med #' + i.medicine_id)}</td>
+        <td class="mono">${i.batch_number||'—'}</td>
+        <td><span style="font-weight:700;color:${qtyColor};font-family:var(--fm)">${i.quantity}</span></td>
+        <td class="mono">KES ${Number(i.unit_cost).toLocaleString()}</td>
+        <td class="mono td-strong">KES ${Number(i.selling_price).toLocaleString()}</td>
+        <td>${expBadge}</td>
+        <td>${expired?'<span class="badge b-red">Expired</span>':expiringSoon?'<span class="badge b-amber">Expiring Soon</span>':'<span class="badge b-green">OK</span>'}</td>
+        <td>${canEdit ? `<button class="tb-btn" style="padding:4px 8px;font-size:11px" onclick="openEditStock(${i.id})">✏️ Edit</button>` : '—'}</td>
+      </tr>`;
+    }).join('');
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// ── Edit an existing stock batch directly (no need to re-add the medicine) ──
+function openEditStock(id) {
+  const batch = allInventory.find(i => i.id === id);
+  if (!batch) { toast('Batch not found','error'); return; }
+  document.getElementById('es-id').value = batch.id;
+  document.getElementById('es-med-label').textContent = medNameCache[batch.medicine_id] || ('Med #' + batch.medicine_id);
+  document.getElementById('es-qty').value = batch.quantity;
+  document.getElementById('es-price').value = batch.selling_price;
+  document.getElementById('es-exp').value = batch.expires_at ? batch.expires_at.slice(0,10) : '';
+  openMo('mo-edit-stock');
+}
+
+async function saveEditStock() {
+  const id = document.getElementById('es-id').value;
+  const exp = document.getElementById('es-exp').value;
+  const p = {
+    quantity: parseInt(document.getElementById('es-qty').value),
+    selling_price: parseFloat(document.getElementById('es-price').value),
+    expires_at: exp ? new Date(exp).toISOString() : null,
+  };
+  if (p.quantity == null || isNaN(p.quantity) || p.quantity < 0) { toast('Enter a valid quantity','error'); return; }
+  if (!p.selling_price) { toast('Enter a valid selling price','error'); return; }
+  try {
+    await req('PATCH', `/inventory/${id}`, p);
+    toast('Stock batch updated','success'); closeMo('mo-edit-stock'); loadInventory();
+  } catch(e) { toast(e.message,'error'); }
+}
+// ── Stock medicine search ─────────────────────────────────────────────
+async function searchStockMedicine() {
+  const q = document.getElementById('s-med-search').value.trim();
+  const results = document.getElementById('s-med-results');
+  const selected = document.getElementById('s-med-selected');
+
+  document.getElementById('s-med').value = '';
+  selected.style.display = 'none';
+
+  if (q.length < 1) { results.style.display = 'none'; return; }
+
+  try {
+    const meds = await req('GET', `/medicines?q=${encodeURIComponent(q)}&limit=8`);
+    if (!meds.length) {
+      results.style.display = 'block';
+      results.innerHTML = '<div style="padding:10px 12px;font-size:12px;color:var(--text3)">No medicines found</div>';
+      return;
+    }
+    results.style.display = 'block';
+    results.innerHTML = meds.map(m => `
+      <div onclick="selectStockMedicine(${m.id}, '${m.name.replace(/'/g,"\\'")} ${m.strength||''}', ${m.unit_price})"
+        style="padding:10px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);transition:background .1s"
+        onmouseover="this.style.background='var(--bg4)'"
+        onmouseout="this.style.background='transparent'">
+        <div style="font-weight:600;color:var(--text)">${m.name}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">
+          ${m.generic_name||''} ${m.strength||''} · KES ${Number(m.unit_price).toLocaleString()} · ID: ${m.id}
+        </div>
+      </div>`).join('');
+  } catch(e) {}
+}
+
+function selectStockMedicine(id, name, unitPrice) {
+  document.getElementById('s-med').value = id;
+  document.getElementById('s-med-search').value = '';
+  document.getElementById('s-med-results').style.display = 'none';
+  const sel = document.getElementById('s-med-selected');
+  sel.style.display = 'block';
+  sel.textContent = `✓ Selected: ${name} (ID: ${id})`;
+  // Pre-fill selling price from the medicine's catalogue unit price —
+  // set once when Add Medicine was created, no need to retype it here.
+  // Still editable in case this batch needs a different price.
+  const priceField = document.getElementById('s-price');
+  if (unitPrice != null && !isNaN(unitPrice) && Number(unitPrice) > 0 && !priceField.value) {
+    priceField.value = Number(unitPrice).toFixed(2);
+  }
+}
+
+// ── Receive Stock ─────────────────────────────────────────────────────
+async function addStock() {
+  const exp = document.getElementById('s-exp').value;
+  const medicineId = parseInt(document.getElementById('s-med').value);
+  if (!medicineId) { toast('Please select a medicine from the search results', 'error'); return; }
+
+  const p = {
+    medicine_id:   medicineId,
+    batch_number:  document.getElementById('s-batch').value || null,
+    quantity:      parseInt(document.getElementById('s-qty').value),
+    unit_cost:     parseFloat(document.getElementById('s-cost').value),
+    selling_price: parseFloat(document.getElementById('s-price').value),
+    expires_at:    exp ? new Date(exp).toISOString() : null,
+    supplier_id:   parseInt(document.getElementById('s-sup').value) || null,
+  };
+
+  if (!p.quantity || !p.unit_cost || !p.selling_price) {
+    toast('Fill in quantity, cost and selling price', 'error'); return;
+  }
+
+  try {
+    await req('POST', '/inventory', p);
+    toast('Stock received', 'success');
+    closeMo('mo-add-stock');
+    // Clear form
+    document.getElementById('s-med').value = '';
+    document.getElementById('s-med-search').value = '';
+    document.getElementById('s-med-selected').style.display = 'none';
+    document.getElementById('s-med-results').style.display = 'none';
+    ['s-batch','s-qty','s-cost','s-price','s-exp','s-sup'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    loadInventory();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+
+// ══════════════════════════════════════════════
+// SUPPLIERS
+// ══════════════════════════════════════════════
+async function loadSuppliers() {
+  try {
+    allSuppliers = await req('GET', '/suppliers');
+    renderSuppliers(allSuppliers);
+  } catch(e) { toast(e.message,'error'); }
+}
+
+function renderSuppliers(data) {
+  const tb = document.getElementById('sup-tb');
+  if (!data.length) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text3)">No suppliers yet</td></tr>'; return; }
+  const canEdit = isAdminOrPharm();
+  tb.innerHTML = data.map(s=>`<tr>
+    <td class="td-strong">${s.name}</td>
+    <td>${s.contact_name||'—'}</td>
+    <td class="mono">${s.phone||'—'}</td>
+    <td>${s.email||'—'}</td>
+    <td>${s.is_active?'<span class="badge b-green">Active</span>':'<span class="badge b-red">Inactive</span>'}</td>
+    <td>${canEdit ? `
+      <div style="display:flex;gap:6px">
+        <button class="tb-btn" style="padding:4px 8px;font-size:11px" onclick="openEditSupplier(${s.id})">✏️ Edit</button>
+        <button class="tb-btn" style="padding:4px 8px;font-size:11px;color:${s.is_active?'var(--rose)':'var(--emerald)'}" onclick="toggleSupplierActive(${s.id},${s.is_active})">${s.is_active?'Deactivate':'Activate'}</button>
+      </div>` : '—'}</td>
+  </tr>`).join('');
+}
+
+function openEditSupplier(id) {
+  const s = allSuppliers.find(x => x.id === id);
+  if (!s) { toast('Supplier not found','error'); return; }
+  document.getElementById('esup-id').value = s.id;
+  document.getElementById('esup-name').value = s.name || '';
+  document.getElementById('esup-contact').value = s.contact_name || '';
+  document.getElementById('esup-phone').value = s.phone || '';
+  document.getElementById('esup-email').value = s.email || '';
+  document.getElementById('esup-addr').value = s.address || '';
+  openMo('mo-edit-supplier');
+}
+
+async function saveEditSupplier() {
+  const id = document.getElementById('esup-id').value;
+  const emailRaw = document.getElementById('esup-email').value.trim();
+  const p = {
+    name: document.getElementById('esup-name').value.trim(),
+    contact_name: document.getElementById('esup-contact').value.trim() || null,
+    phone: document.getElementById('esup-phone').value.trim() || null,
+    email: emailRaw || null,
+    address: document.getElementById('esup-addr').value.trim() || null,
+  };
+  if (!p.name) { toast('Supplier name required','error'); return; }
+  try {
+    await req('PATCH', `/suppliers/${id}`, p);
+    toast('Supplier updated','success'); closeMo('mo-edit-supplier'); loadSuppliers();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function toggleSupplierActive(id, currentlyActive) {
+  try {
+    await req('PATCH', `/suppliers/${id}`, { is_active: !currentlyActive });
+    toast(currentlyActive ? 'Supplier deactivated' : 'Supplier activated','success');
+    loadSuppliers();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+function filterSuppliers() {
+  const q = document.getElementById('sup-q').value.toLowerCase();
+  renderSuppliers(allSuppliers.filter(s=>s.name.toLowerCase().includes(q)));
+}
+
+async function addSupplier() {
+  const emailRaw = document.getElementById('sup-email').value.trim();
+  const p = {
+    name:         document.getElementById('sup-name').value.trim(),
+    contact_name: document.getElementById('sup-contact').value.trim() || null,
+    phone:        document.getElementById('sup-phone').value.trim()   || null,
+    //  same EmailStr issue — send null not "" when field is blank
+    email:        emailRaw || null,
+    address:      document.getElementById('sup-addr').value.trim()   || null,
+  };
+  if (!p.name) { toast('Supplier name required','error'); return; }
+  try {
+    await req('POST', '/suppliers', p);
+    toast('Supplier added','success'); closeMo('mo-add-supplier'); loadSuppliers();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// ══════════════════════════════════════════════
+// CUSTOMERS
+// ══════════════════════════════════════════════
+async function loadCustomers() {
+  try {
+    allCustomers = await req('GET', '/customers?limit=200');
+    renderCustomers(allCustomers);
+  } catch(e) { toast(e.message,'error'); }
+}
+
+function renderCustomers(data) {
+  const tb = document.getElementById('cust-tb');
+  if (!data.length) { tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text3)">No patients yet</td></tr>'; return; }
+  tb.innerHTML = data.map(c=>`<tr>
+    <td class="td-strong">👤 ${c.full_name}</td>
+    <td class="mono">${c.phone||'—'}</td>
+    <td>${c.email||'—'}</td>
+    <td class="mono">${c.id_number||'—'}</td>
+    <td><span class="badge b-violet">⭐ ${c.loyalty_points||0}</span></td>
+    <td>${c.is_active?'<span class="badge b-green">Active</span>':'<span class="badge b-red">Inactive</span>'}</td>
+    <td>
+      <div style="display:flex;gap:6px">
+        <button class="tb-btn" style="padding:4px 8px;font-size:11px" onclick="openEditCustomer(${c.id})">✏️ Edit</button>
+        ${isAdmin() ? `<button class="tb-btn" style="padding:4px 8px;font-size:11px;color:${c.is_active?'var(--rose)':'var(--emerald)'}" onclick="toggleCustomerActive(${c.id},${c.is_active})">${c.is_active?'Deactivate':'Activate'}</button>` : ''}
+      </div>
+    </td>
+  </tr>`).join('');
+}
+
+function openEditCustomer(id) {
+  const c = allCustomers.find(x => x.id === id);
+  if (!c) { toast('Patient not found','error'); return; }
+  document.getElementById('ec-id').value = c.id;
+  document.getElementById('ec-name').value = c.full_name || '';
+  document.getElementById('ec-phone').value = c.phone || '';
+  document.getElementById('ec-email').value = c.email || '';
+  document.getElementById('ec-ins').value = c.insurance_no || '';
+  openMo('mo-edit-customer');
+}
+
+async function saveEditCustomer() {
+  const id = document.getElementById('ec-id').value;
+  const emailRaw = document.getElementById('ec-email').value.trim();
+  const p = {
+    full_name: document.getElementById('ec-name').value.trim(),
+    phone: document.getElementById('ec-phone').value.trim() || null,
+    email: emailRaw || null,
+    insurance_no: document.getElementById('ec-ins').value.trim() || null,
+  };
+  if (!p.full_name || p.full_name.length < 2) { toast('Patient name must be at least 2 characters','error'); return; }
+  try {
+    await req('PATCH', `/customers/${id}`, p);
+    toast('Patient updated','success'); closeMo('mo-edit-customer'); loadCustomers();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function toggleCustomerActive(id, currentlyActive) {
+  try {
+    await req('PATCH', `/customers/${id}`, { is_active: !currentlyActive });
+    toast(currentlyActive ? 'Patient deactivated' : 'Patient activated','success');
+    loadCustomers();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+function filterCustomers() {
+  const q = document.getElementById('cust-q').value.toLowerCase();
+  renderCustomers(allCustomers.filter(c=>c.full_name.toLowerCase().includes(q)||(c.phone||'').includes(q)));
+}
+
+async function addCustomer() {
+  const dobRaw   = document.getElementById('c-dob').value;    // "YYYY-MM-DD" or ""
+  const emailRaw = document.getElementById('c-email').value.trim();
+
+  // FIX 1: EmailStr rejects "" (empty string) — only send email if user typed one.
+  // FIX 2: date_of_birth must be a valid ISO datetime string or null, never "".
+  // FIX 3: All optional text fields send null (not "") so the backend doesn't
+  //         try to validate empty strings against min_length constraints.
+  const p = {
+    full_name:    document.getElementById('c-name').value.trim(),
+    phone:        document.getElementById('c-phone').value.trim()  || null,
+    email:        emailRaw || null,       // null → field omitted from validation
+    id_number:    document.getElementById('c-id').value.trim()    || null,
+    insurance_no: document.getElementById('c-ins').value.trim()   || null,
+    // date input gives "YYYY-MM-DD"; append T00:00:00 for a valid ISO string.
+    // Sending a raw date string ("2000-01-01") without time can be rejected by
+    // Pydantic datetime parsing on some platforms.
+    date_of_birth: dobRaw ? dobRaw + 'T00:00:00' : null,
+    notes: null,
+  };
+
+  if (!p.full_name) { toast('Patient name is required', 'error'); return; }
+  if (p.full_name.length < 2) { toast('Name must be at least 2 characters', 'error'); return; }
+
+  try {
+    await req('POST', '/customers', p);
+    toast('Patient registered successfully', 'success');
+    closeMo('mo-add-customer');
+    // Clear form fields for next entry
+    ['c-name','c-phone','c-email','c-id','c-ins','c-dob'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    loadCustomers();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function searchPosCust() {
+  const q = document.getElementById('pos-cust-q').value.trim();
+  const el = document.getElementById('pos-cust-res');
+  if (q.length < 2) return;
+  try {
+    const data = await req('GET', `/customers?q=${encodeURIComponent(q)}&limit=5`);
+    if (!data.length) { el.innerHTML = '<div style="color:var(--text3);text-align:center;padding:16px;font-size:13px">No patients found</div>'; return; }
+    el.innerHTML = data.map(c=>`
+      <div onclick="pickCustomer(${c.id},${JSON.stringify(c.full_name)})"
+        style="padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);cursor:pointer;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;transition:border-color .12s"
+        onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div>
+          <div style="font-weight:700;font-size:13px">👤 ${c.full_name}</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">${c.phone||c.email||'No contact info'}</div>
+        </div>
+        <span class="badge b-violet">⭐ ${c.loyalty_points||0}</span>
+      </div>`).join('');
+  } catch(e){}
+}
+
+function pickCustomer(id, name) {
+  custId = id; custName = name;
+  document.getElementById('cust-label').textContent = name;
+  closeMo('mo-customer');
+  toast('Patient: ' + name, 'success', 2000);
+}
+
+function clearCustomer() {
+  custId = null; custName = null;
+  document.getElementById('cust-label').textContent = 'Walk-in';
+  closeMo('mo-customer');
+}
+
+// ══════════════════════════════════════════════
+// USERS
+// ══════════════════════════════════════════════
+async function loadUsers() {
+  try {
+    const data = await req('GET', '/users');
+    allUsers = data;
+    const tb = document.getElementById('users-tb');
+    if (!data.length) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text3)">No staff accounts</td></tr>'; return; }
+    tb.innerHTML = data.map(u=>`<tr>
+      <td class="td-strong">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">${u.full_name[0]}</div>
+          ${u.full_name}
+        </div>
+      </td>
+      <td>${u.email}</td>
+      <td>${roleBadge(u.role)}</td>
+      <td style="color:var(--text3)">${u.last_login?new Date(u.last_login).toLocaleDateString('en-KE'):'Never'}</td>
+      <td>${u.is_active?'<span class="badge b-green">Active</span>':'<span class="badge b-red">Inactive</span>'}</td>
+      <td>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="tb-btn" style="padding:4px 8px;font-size:11px" onclick="openEditUser(${u.id})">✏️ Edit</button>
+          <button class="tb-btn" style="padding:4px 8px;font-size:11px" onclick="openResetPassword(${u.id},'${u.full_name.replace(/'/g,"\\'")}')">🔑 Reset PW</button>
+          ${u.id !== me.id ? `<button class="tb-btn" style="padding:4px 8px;font-size:11px;color:${u.is_active?'var(--rose)':'var(--emerald)'}" onclick="toggleUserActive(${u.id},${u.is_active})">${u.is_active?'Deactivate':'Activate'}</button>` : ''}
+        </div>
+      </td>
+    </tr>`).join('');
+  } catch(e) { toast(e.message,'error'); }
+}
+
+function openEditUser(id) {
+  const u = allUsers.find(x => x.id === id);
+  if (!u) { toast('Staff member not found','error'); return; }
+  document.getElementById('eu-id').value = u.id;
+  document.getElementById('eu-fname').value = u.full_name || '';
+  document.getElementById('eu-phone').value = u.phone || '';
+  document.getElementById('eu-role').value = u.role;
+  document.getElementById('eu-active').value = u.is_active ? 'true' : 'false';
+  openMo('mo-edit-user');
+}
+
+async function saveEditUser() {
+  const id = document.getElementById('eu-id').value;
+  const p = {
+    full_name: document.getElementById('eu-fname').value.trim(),
+    phone: document.getElementById('eu-phone').value.trim() || null,
+    role: document.getElementById('eu-role').value,
+    is_active: document.getElementById('eu-active').value === 'true',
+  };
+  if (!p.full_name || p.full_name.length < 2) { toast('Name must be at least 2 characters','error'); return; }
+  try {
+    await req('PATCH', `/users/${id}`, p);
+    toast('Staff account updated','success'); closeMo('mo-edit-user'); loadUsers();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function toggleUserActive(id, currentlyActive) {
+  try {
+    await req('PATCH', `/users/${id}`, { is_active: !currentlyActive });
+    toast(currentlyActive ? 'Staff account deactivated' : 'Staff account activated','success');
+    loadUsers();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+function openResetPassword(id, name) {
+  document.getElementById('rp-id').value = id;
+  document.getElementById('rp-name-label').textContent = name;
+  document.getElementById('rp-pass').value = '';
+  openMo('mo-reset-password');
+}
+
+async function saveResetPassword() {
+  const id = document.getElementById('rp-id').value;
+  const pass = document.getElementById('rp-pass').value;
+  if (!pass || pass.length < 8) { toast('Password must be at least 8 characters','error'); return; }
+  try {
+    await req('POST', `/users/${id}/reset-password?new_password=${encodeURIComponent(pass)}`);
+    toast('Password reset successfully','success'); closeMo('mo-reset-password');
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function addUser() {
+  const pass = document.getElementById('u-pass').value;
+  const emailRaw = document.getElementById('u-email').value.trim();
+
+  // FIX: surface password complexity requirements BEFORE hitting the backend,
+  // so the cashier gets a clear message instead of a raw 422 validation error.
+  if (!pass || pass.length < 8) { toast('Password must be at least 8 characters', 'error'); return; }
+  if (!/[A-Z]/.test(pass)) { toast('Password must contain at least one uppercase letter', 'error'); return; }
+  if (!/[a-z]/.test(pass)) { toast('Password must contain at least one lowercase letter', 'error'); return; }
+  if (!/[0-9]/.test(pass)) { toast('Password must contain at least one number', 'error'); return; }
+
+  const p = {
+    full_name: document.getElementById('u-fname').value.trim(),
+    email:     emailRaw,
+    password:  pass,
+    phone:     document.getElementById('u-phone').value.trim() || null,
+    role:      document.getElementById('u-role-input').value,
+  };
+  if (!p.full_name || !p.email || !p.password) { toast('Name, email and password are required','error'); return; }
+  try {
+    await req('POST', '/users', p);
+    toast('Staff account created','success'); closeMo('mo-add-user');
+    ['u-fname','u-email','u-pass','u-phone'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('u-role-input').value = 'cashier';
+    loadUsers();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// ══════════════════════════════════════════════
+// ALERTS
+// ══════════════════════════════════════════════
+async function loadAlerts() {
+  try {
+    const data = await req('GET', `/alerts?is_resolved=${alertsResolved}`);
+    updateAlertBadge(alertsResolved ? undefined : data.length);
+    const el = document.getElementById('alerts-wrap');
+    if (!data.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">✅</div><p>' + (alertsResolved ? 'No resolved alerts' : 'No active alerts — all good!') + '</p></div>'; return; }
+    el.innerHTML = data.map(a => alertCard(a, !alertsResolved)).join('');
+  } catch(e) { toast(e.message,'error'); }
+}
+
+function alertCard(a, showResolve) {
+  const isOut = a.alert_type === 'out_of_stock';
+  const dotColor = isOut ? 'var(--rose)' : a.alert_type === 'expiry' ? 'var(--amber)' : 'var(--amber)';
+  const typeColor = isOut ? 'var(--rose)' : 'var(--amber)';
+  return `<div class="alert-card">
+    <div class="alert-dot" style="background:${dotColor}"></div>
+    <div class="alert-body">
+      <div class="alert-type" style="color:${typeColor}">${a.alert_type.replace(/_/g,' ')}</div>
+      <div class="alert-msg">${a.message}</div>
+      <div class="alert-time">${new Date(a.created_at).toLocaleString('en-KE')}</div>
+    </div>
+    ${showResolve ? `<button class="btn btn-ghost" style="font-size:11px;padding:5px 10px;flex-shrink:0" onclick="resolveAlert(${a.id})">✓ Resolve</button>` : ''}
+  </div>`;
+}
+
+function toggleAlertFilter(resolved) {
+  alertsResolved = resolved;
+  document.getElementById('filter-unresolved').style.background = !resolved ? 'var(--accent-dim)' : '';
+  document.getElementById('filter-unresolved').style.color = !resolved ? 'var(--accent)' : '';
+  document.getElementById('filter-resolved').style.background = resolved ? 'var(--accent-dim)' : '';
+  document.getElementById('filter-resolved').style.color = resolved ? 'var(--accent)' : '';
+  loadAlerts();
+}
+
+async function resolveAlert(id) {
+  try {
+    await req('POST', `/alerts/${id}/resolve`);
+    toast('Alert resolved','success'); loadAlerts();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function scanAlerts() {
+  toast('Scanning inventory...','info',3000);
+  try {
+    const r = await req('POST', '/alerts/scan');
+    toast(r.message,'info'); loadAlerts();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// ══════════════════════════════════════════════
+// REPORTS
+// ══════════════════════════════════════════════
+function initReports() {
+  // Set default dates
+  const today = new Date().toISOString().split('T')[0];
+  const monthAgo = new Date(Date.now()-30*86400000).toISOString().split('T')[0];
+  document.getElementById('rpt-from').value = monthAgo;
+  document.getElementById('rpt-to').value = today;
+  loadStockSummary();
+}
+
+async function loadReport() {
+  const from = document.getElementById('rpt-from').value;
+  const to = document.getElementById('rpt-to').value;
+  if (!from||!to) { toast('Select date range','error'); return; }
+  try {
+    const r = await req('GET', `/reports/sales-summary?from_date=${from}T00:00:00&to_date=${to}T23:59:59`);
+    document.getElementById('rpt-result').innerHTML = `
+      <div class="rpt-grid">
+        <div class="stat" style="border-top:2px solid var(--emerald)">
+          <div class="stat-label">Total Sales</div>
+          <div class="stat-value">${r.total_sales}</div>
+          <div class="stat-delta">${from} → ${to}</div>
+        </div>
+        <div class="stat" style="border-top:2px solid var(--accent)">
+          <div class="stat-label">Gross Revenue</div>
+          <div class="stat-value" style="font-size:18px">KES ${Number(r.total_revenue).toLocaleString()}</div>
+          <div class="stat-delta">before discounts</div>
+        </div>
+        <div class="stat" style="border-top:2px solid var(--violet)">
+          <div class="stat-label">Net Revenue</div>
+          <div class="stat-value" style="font-size:18px">KES ${Number(r.net_revenue).toLocaleString()}</div>
+          <div class="stat-delta">after discounts</div>
+        </div>
+      </div>`;
+    const top = await req('GET', `/reports/top-medicines?from_date=${from}T00:00:00&to_date=${to}T23:59:59`);
+    document.getElementById('top-meds-tb').innerHTML = top.length
+      ? top.map((m,i)=>`<tr>
+          <td style="color:var(--text3);font-weight:700">#${i+1}</td>
+          <td class="td-strong">${m.medicine_name}</td>
+          <td class="mono">${m.total_quantity_sold}</td>
+          <td class="mono td-strong" style="color:var(--emerald)">KES ${Number(m.total_revenue).toLocaleString()}</td>
+        </tr>`).join('')
+      : '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text3)">No sales data for this period</td></tr>';
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function loadStockSummary() {
+  try {
+    const data = await req('GET', '/inventory/summary/by-medicine');
+    const el = document.getElementById('stock-summary-list');
+    if (!data.length) { el.innerHTML = '<div style="color:var(--text3);font-size:13px">No stock data</div>'; return; }
+    el.innerHTML = data.slice(0,12).map(r => {
+      const pct = Math.min(100, Math.round((r.total_quantity/50)*100));
+      const color = pct < 20 ? 'var(--rose)' : pct < 50 ? 'var(--amber)' : 'var(--emerald)';
+      return `<div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+          <span style="font-weight:600;color:var(--text)">${r.medicine_name}</span>
+          <span class="mono" style="font-size:11px;color:${color}">${r.total_quantity} units</span>
+        </div>
+        <div class="stock-bar-wrap">
+          <div class="stock-bar-bg" style="height:6px"><div class="stock-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e){}
+}
+
+// ══════════════════════════════════════════════
+// BADGE HELPERS
+// ══════════════════════════════════════════════
+function statusBadge(s) {
+  const map = {completed:'b-green',voided:'b-red',pending:'b-amber',refunded:'b-violet'};
+  return `<span class="badge ${map[s]||'b-gray'}">${s}</span>`;
+}
+function payBadge(p) {
+  const map = {cash:'b-green',mpesa:'b-blue',card:'b-violet',insurance:'b-amber'};
+  return `<span class="badge ${map[p]||'b-gray'}">${p}</span>`;
+}
+function roleBadge(r) {
+  const map = {admin:'b-red',pharmacist:'b-blue',cashier:'b-green'};
+  return `<span class="badge ${map[r]||'b-gray'}">${r}</span>`;
+}
+
+// ══════════════════════════════════════════════
+// MODALS
+// ══════════════════════════════════════════════
+function openMo(id) { document.getElementById(id)?.classList.add('open'); }
+function closeMo(id) {
+  document.getElementById(id)?.classList.remove('open');
+  // Clear stock medicine search when receive stock modal closes
+  if (id === 'mo-add-stock') {
+    document.getElementById('s-med').value = '';
+    document.getElementById('s-med-search').value = '';
+    const results = document.getElementById('s-med-results');
+    const selected = document.getElementById('s-med-selected');
+    if (results) results.style.display = 'none';
+    if (selected) selected.style.display = 'none';
+  }
+}
+document.querySelectorAll('.mo').forEach(o => {
+  o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); });
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.mo.open').forEach(m=>m.classList.remove('open'));
+  if (e.key === '/' && curPage !== 'pos' && document.activeElement.tagName !== 'INPUT') {
+    e.preventDefault();
+    goPage('pos', document.querySelector('[data-page=pos]'));
+    setTimeout(()=>document.getElementById('med-q')?.focus(), 100);
+  }
+});
+
+// Init report dates
+const _today = new Date().toISOString().split('T')[0];
+const _monthAgo = new Date(Date.now()-30*86400000).toISOString().split('T')[0];
+document.getElementById('rpt-from').value = _monthAgo;
+document.getElementById('rpt-to').value = _today;
+</script>
+</body>
+</html>
