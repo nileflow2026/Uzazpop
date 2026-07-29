@@ -23,24 +23,18 @@ services:
       - key: DEBUG
         value: "false"
 
+      # ── Self-registration flow ───────────────────────────────────────
+      # AUTO_CREATE_FIRST_ADMIN=false so landing page signup (M-Pesa + auto-create)
+      # is the only way to set up this pharmacy. No hardcoded admin.
       - key: AUTO_CREATE_FIRST_ADMIN
-        value: "true"
+        value: "false"
 
-      - key: FIRST_ADMIN_EMAIL
-        value: admin@yourpharmacy.com
-
-      - key: FIRST_ADMIN_NAME
-        value: System Admin
-
-      # ⚠ Set these manually in Render dashboard after deploy
-      - key: FIRST_ADMIN_PASSWORD
-        sync: false
-
+      # ── App ──────────────────────────────────────────────────────────
       - key: ALLOWED_ORIGINS
-        value: '["https://uza-pap-pos.onrender.com"]'
+        value: '["https://uzazpop.onrender.com"]'
 
       - key: TRUSTED_HOSTS
-        value: '["uza-pap-pos.onrender.com"]'
+        value: '["uzazpop.onrender.com"]'
 
       - key: APP_NAME
         value: "Uza Pap POS"
@@ -48,41 +42,35 @@ services:
       - key: APP_VERSION
         value: "1.0.0"
 
-      # M-Pesa (sandbox defaults; set production values manually)
+      # ── M-Pesa ───────────────────────────────────────────────────────
+      # ⚠ Set MPESA_CONSUMER_KEY, MPESA_CONSUMER_SECRET, and MPESA_PASSKEY
+      #    manually in Render dashboard (they are marked sync: false)
       - key: MPESA_CONSUMER_KEY
         sync: false
-
       - key: MPESA_CONSUMER_SECRET
         sync: false
-
       - key: MPESA_SHORTCODE
         value: "174379"
-
+      - key: MPESA_SHORTCODE_TYPE
+        value: "till"
       - key: MPESA_PASSKEY
         sync: false
-
       - key: MPESA_CALLBACK_URL
-        value: https://uza-pap-pos.onrender.com/payments/mpesa/callback
-
+        value: https://uzazpop.onrender.com/payments/mpesa/callback
       - key: MPESA_ENV
         value: sandbox
 
+      # ── Optional ─────────────────────────────────────────────────────
       - key: OPENFDA_API_KEY
         value: ""
-
-      # Email (optional — leave blank to log to console)
       - key: SMTP_HOST
         value: ""
-
       - key: SMTP_PORT
         value: "587"
-
       - key: SMTP_USER
         value: ""
-
       - key: SMTP_PASSWORD
         sync: false
-
       - key: SMTP_FROM_EMAIL
         value: "no-reply@yourpharmacy.com"
 
