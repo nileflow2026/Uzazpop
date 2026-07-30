@@ -880,8 +880,15 @@ async function processPayment() {
       return;
     }
 
-    document.getElementById('reg-step2').style.display = 'none';
-    document.getElementById('reg-step3').style.display = 'block';
+        // Update dynamic display with the amount the server actually charged
+        const displayAmount = `KES ${d.amount}`;
+        const payValEl = document.querySelector('.payment-amount-val');
+        if (payValEl) payValEl.textContent = displayAmount;
+        const payBtn = document.getElementById('pay-btn');
+        payBtn.textContent = `📱 Pay ${displayAmount} via M-Pesa`;
+
+        document.getElementById('reg-step2').style.display = 'none';
+        document.getElementById('reg-step3').style.display = 'block';
     let secs = 60;
     const cdEl = document.getElementById('pay-countdown');
     cdEl.textContent = secs;

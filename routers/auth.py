@@ -308,7 +308,9 @@ def register_initiate(payload: RegisterInitiateIn, request: Request, db: Session
         raise HTTPException(status_code=400, detail="Enter a valid email address")
 
     try:
-        amount_kes = settings.REGISTRATION_FEE_KES
+        # Use MPESA_TEST_AMOUNT if set (for production testing with KES 2),
+        # otherwise fall back to the configured registration fee
+        amount_kes = settings.MPESA_TEST_AMOUNT if settings.MPESA_TEST_AMOUNT is not None else settings.REGISTRATION_FEE_KES
         result = stk_push(
             phone_number=payload.phone_number,
             amount=amount_kes,
