@@ -278,6 +278,22 @@ def reset_password(payload: ResetPasswordIn, request: Request, db: Session = Dep
     return {"message": "Password reset successfully. You can now sign in."}
 
 
+@router.get("/registration-fee", summary="Return the current effective registration fee")
+def get_registration_fee():
+    """
+    Returns the current effective registration fee in KES.
+    Respects MPESA_TEST_AMOUNT if set (for production M-Pesa testing).
+    The frontend fetches this on page load to display the correct amount.
+    """
+    fee = settings.MPESA_TEST_AMOUNT if settings.MPESA_TEST_AMOUNT is not None else settings.REGISTRATION_FEE_KES
+    return {
+        "amount": fee,
+        "currency": "KES",
+        "label": f"KES {fee}",
+        "test_mode": settings.MPESA_TEST_AMOUNT is not None,
+    }
+
+
 @router.post("/register/initiate", response_model=RegisterInitiateOut,
              summary="Start paid self-registration for a new pharmacy install (bootstrap only)")
 @limiter.limit("3/minute")
