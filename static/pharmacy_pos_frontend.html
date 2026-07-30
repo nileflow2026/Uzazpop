@@ -1560,29 +1560,43 @@ function logout() {
 
 // check token isn't expired before auto-restoring session
 if (token && me) {
-  try {
-    // Decode JWT payload to check expiry
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    const expiresAt = payload.exp * 1000; // convert to ms
-    const minutesLeft = Math.round((expiresAt - Date.now()) / 60000);
+  (async () => {
+    try {
+      // Decode JWT payload to check expiry
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const expiresAt = payload.exp * 1000;
+      const minutesLeft = Math.round((expiresAt - Date.now()) / 60000);
 
-    if (Date.now() < expiresAt) {
-      // Token still valid — restore session
-      initUI();
-      if (minutesLeft < 30) {
-        toast(`Session expires in ${minutesLeft} minutes`, 'warn', 5000);
+      if (Date.now() < expiresAt) {
+        // Token still valid — ALWAYS re-fetch user profile from server
+        // instead of trusting the potentially stale localStorage cache.
+        // This ensures the newly-created admin (from self-registration)
+        // sees their own data, not a previous admin's cached session.
+        try {
+          const freshMe = await req('GET', '/auth/me');
+          if (freshMe) {
+            me = freshMe;
+            localStorage.setItem('pos_me', JSON.stringify(freshMe));
+          }
+        } catch(e) {
+          // Fall back to cached me
+        }
+        initUI();
+        if (minutesLeft < 30) {
+          toast(`Session expires in ${minutesLeft} minutes`, 'warn', 5000);
+        }
+      } else {
+        // Token expired — clear everything and show login
+        localStorage.removeItem('pos_token');
+        localStorage.removeItem('pos_me');
+        toast('Your session expired. Please sign in again.', 'info');
       }
-    } else {
-      // Token expired — clear and show login
+    } catch(e) {
+      // Can't decode token — clear and show login
       localStorage.removeItem('pos_token');
       localStorage.removeItem('pos_me');
-      toast('Your session expired. Please sign in again.', 'info');
     }
-  } catch(e) {
-    // Can't decode token — clear and show login
-    localStorage.removeItem('pos_token');
-    localStorage.removeItem('pos_me');
-  }
+  })();
 }
 
 // ── Register service worker so the app shell can load even with no
