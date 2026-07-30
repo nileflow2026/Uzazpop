@@ -273,7 +273,11 @@ def get_payment_status(
 
     # If still pending after 70s, query Safaricom directly
     if txn.status == MpesaStatus.PENDING:
-        age_seconds = (datetime.now(timezone.utc) - txn.created_at).total_seconds()
+        # Guard against naive datetime (old records created before timezone=True was set)
+        created = txn.created_at
+        if created.tzinfo is None:
+            created = created.replace(tzinfo=timezone.utc)
+        age_seconds = (datetime.now(timezone.utc) - created).total_seconds()
         if age_seconds > 70:
             try:
                 result = query_stk_status(checkout_request_id)
