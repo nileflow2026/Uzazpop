@@ -45,11 +45,6 @@ services:
       # ── M-Pesa ───────────────────────────────────────────────────────
       # ⚠ Set MPESA_CONSUMER_KEY, MPESA_CONSUMER_SECRET, and MPESA_PASSKEY
       #    manually in Render dashboard (they are marked sync: false)
-      # ── Production testing override ──────────────────────────────────
-      # Set to "2" for testing production M-Pesa with a minimal amount.
-      # Remove when done testing to revert to REGISTRATION_FEE_KES=300.
-      - key: MPESA_TEST_AMOUNT
-        sync: false
       - key: MPESA_CONSUMER_KEY
         sync: false
       - key: MPESA_CONSUMER_SECRET

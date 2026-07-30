@@ -278,19 +278,14 @@ def reset_password(payload: ResetPasswordIn, request: Request, db: Session = Dep
     return {"message": "Password reset successfully. You can now sign in."}
 
 
-@router.get("/registration-fee", summary="Return the current effective registration fee")
+@router.get("/registration-fee", summary="Return the registration fee")
 def get_registration_fee():
-    """
-    Returns the current effective registration fee in KES.
-    Respects MPESA_TEST_AMOUNT if set (for production M-Pesa testing).
-    The frontend fetches this on page load to display the correct amount.
-    """
-    fee = settings.MPESA_TEST_AMOUNT if settings.MPESA_TEST_AMOUNT is not None else settings.REGISTRATION_FEE_KES
+    """Returns the registration fee in KES. Always KES 300."""
     return {
-        "amount": fee,
+        "amount": settings.REGISTRATION_FEE_KES,
         "currency": "KES",
-        "label": f"KES {fee}",
-        "test_mode": settings.MPESA_TEST_AMOUNT is not None,
+        "label": f"KES {settings.REGISTRATION_FEE_KES}",
+        "test_mode": False,
     }
 
 
@@ -324,9 +319,7 @@ def register_initiate(payload: RegisterInitiateIn, request: Request, db: Session
         raise HTTPException(status_code=400, detail="Enter a valid email address")
 
     try:
-        # Use MPESA_TEST_AMOUNT if set (for production testing with KES 2),
-        # otherwise fall back to the configured registration fee
-        amount_kes = settings.MPESA_TEST_AMOUNT if settings.MPESA_TEST_AMOUNT is not None else settings.REGISTRATION_FEE_KES
+        amount_kes = settings.REGISTRATION_FEE_KES
         result = stk_push(
             phone_number=payload.phone_number,
             amount=amount_kes,

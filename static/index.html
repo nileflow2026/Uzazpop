@@ -736,41 +736,10 @@ footer { background: var(--bg2); border-top: 1.5px solid var(--border); padding:
 <script>
 const API = 'https://uzazpop-by7v.onrender.com'
 
-// ── Dynamic fee state (fetched from server on page load) ──────────────
-let REG_FEE = 300       // default fallback
-let REG_FEE_LABEL = 'KES 300'
-
-async function fetchFee() {
-  try {
-    const r = await fetch(API + '/auth/registration-fee')
-    if (r.ok) {
-      const d = await r.json()
-      REG_FEE = d.amount
-      REG_FEE_LABEL = d.label
-      applyFeeToPage()
-    }
-  } catch(e) {
-    // fallback to defaults
-  }
-}
-
-function applyFeeToPage() {
-  // Hero
-  document.getElementById('hero-price').textContent = REG_FEE_LABEL
-  document.getElementById('hero-btn').textContent = `Start for ${REG_FEE_LABEL} →`
-  document.getElementById('stat-price').textContent = REG_FEE_LABEL
-  // Testimonial
-  document.getElementById('testimonial-price').textContent = REG_FEE_LABEL
-  // CTA
-  document.getElementById('cta-sub').textContent =
-    `Join hundreds of Kenyan pharmacies already using Uza Pap POS — ${REG_FEE_LABEL}/month, billed via M-Pesa.`
-  // Modal
-  document.getElementById('payment-amount-val').textContent = REG_FEE_LABEL
-  document.getElementById('pay-btn').textContent = `📱 Pay ${REG_FEE_LABEL} via M-Pesa`
-  document.getElementById('signup-btn-text').textContent = `Create account — ${REG_FEE_LABEL}/month`
-}
-// Fetch fee immediately
-fetchFee()
+// ── Hardcoded KES 300 registration fee ───────────────────────────────
+// The fee is always KES 300/month. No dynamic fetch needed.
+const REG_FEE = 300
+const REG_FEE_LABEL = 'KES 300'
 
 function toast(msg, type='info', ms=4000) {
   const w = document.getElementById('toasts');
