@@ -272,6 +272,12 @@ def get_payment_status(
         raise HTTPException(status_code=404, detail="Transaction not found")
 
     # If still pending after 70s, query Safaricom directly
+    # ── Self-registration: create the admin account if payment succeeded ──
+    # This runs on EVERY status check (not just after 70s fallback) so the
+    # account is created as soon as the status flips to SUCCESS, whether
+    # that happened via callback, fallback query, or manual update.
+    # This prevents the race condition where the frontend sees SUCCESS and
+    # tries to log in before the User row exists.
     if txn.status == MpesaStatus.PENDING:
         # Guard against naive datetime (old records created before timezone=True was set)
         created = txn.created_at
@@ -298,6 +304,44 @@ def get_payment_status(
                 db.commit()
             except Exception as e:
                 logger.warning("STK status query failed: %s", e)
+
+    # ── Registration completion (runs on every poll after status is SUCCESS) ──
+    if txn.purpose == "registration" and txn.status == MpesaStatus.SUCCESS and not txn.registration_completed:
+        logger.info(
+            "Status poll detected successful registration payment for %s — "
+            "creating admin account",
+            txn.pending_email,
+        )
+        existing = db.query(User).filter(User.email == txn.pending_email).first()
+        if existing:
+            logger.warning(
+                "Registration payment succeeded but user %s already exists — skipping",
+                txn.pending_email,
+            )
+            txn.registration_completed = True
+            db.commit()
+        else:
+            new_admin = User(
+                full_name=txn.pending_full_name,
+                email=txn.pending_email,
+                hashed_password=txn.pending_password_hash,
+                role=UserRole.ADMIN,
+                is_active=True,
+                phone=txn.pending_phone,
+                pharmacy_name=txn.pending_pharmacy_name,
+            )
+            db.add(new_admin)
+            txn.registration_completed = True
+            db.add(AuditLog(
+                user_id=None,
+                action="REGISTRATION_COMPLETED",
+                detail=(
+                    f"Admin account created for {txn.pending_email} "
+                    f"after confirmed payment"
+                ),
+            ))
+            logger.info("Self-registration complete for %s", txn.pending_email)
+            db.commit()
 
     return MpesaStatusOut(
         checkout_request_id=txn.checkout_request_id,
