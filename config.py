@@ -68,6 +68,13 @@ class Settings(BaseSettings):
     # ── Self-registration (landing page paid signup) ─────────────────────
     REGISTRATION_FEE_KES: int = 300
 
+    # ── M-Pesa production testing ─────────────────────────────────────────
+    # Set MPESA_TEST_AMOUNT (e.g. "2") to temporarily override the
+    # registration fee for testing the production M-Pesa environment
+    # with a minimal amount. Remove or set to empty when done testing.
+    # Only meaningful when MPESA_ENV=production.
+    MPESA_TEST_AMOUNT: Optional[int] = None
+
     # ── Pydantic v2 config ────────────────────────────────────────────────
     model_config = SettingsConfigDict(
         env_file=".env",

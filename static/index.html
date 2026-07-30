@@ -328,15 +328,16 @@ footer { background: var(--bg2); border-top: 1.5px solid var(--border); padding:
     <div class="hero-badge">Built for Kenya · M-Pesa Ready</div>
     <h1>Pharmacy software<br/>that <span class="accent">just works</span></h1>
     <p class="hero-sub">
-      Sales, stock, expiry alerts, and M-Pesa payments — all in one place. No setup, no hardware. Just KES 300/month.
+      Sales, stock, expiry alerts, and M-Pesa payments — all in one place. No setup, no hardware.
+      Just <strong id="hero-price">KES 300</strong>/month.
     </p>
     <div class="hero-actions">
-      <button class="btn-hero" onclick="openModal('register')">Start for KES 300 →</button>
+      <button class="btn-hero" id="hero-btn" onclick="openModal('register')">Start for KES 300 →</button>
       <a class="btn-hero-outline" href="#features">See features</a>
     </div>
     <div class="hero-stats">
       <div class="hero-stat">
-        <div class="hero-stat-val">KES 300</div>
+        <div class="hero-stat-val" id="stat-price">KES 300</div>
         <div class="hero-stat-label">Per month</div>
       </div>
       <div class="hero-stat">
@@ -463,7 +464,7 @@ footer { background: var(--bg2); border-top: 1.5px solid var(--border); padding:
     </div>
     <div class="testimonial">
       <div class="testimonial-stars">★★★★★</div>
-      <div class="testimonial-text">"KES 300 a month is nothing compared to what I was paying for my old system. And this one actually works on my phone too!"</div>
+      <div class="testimonial-text">"<span id="testimonial-price">KES 300</span> a month is nothing compared to what I was paying for my old system. And this one actually works on my phone too!"</div>
       <div class="testimonial-author">
         <div class="testimonial-avatar">PK</div>
         <div>
@@ -511,7 +512,7 @@ footer { background: var(--bg2); border-top: 1.5px solid var(--border); padding:
 <!-- CTA -->
 <section id="cta">
   <div class="cta-title">Ready to transform your pharmacy?</div>
-  <div class="cta-sub">Join hundreds of Kenyan pharmacies already using Uza Pap POS — KES 300/month, billed via M-Pesa.</div>
+  <div class="cta-sub" id="cta-sub">Join hundreds of Kenyan pharmacies already using Uza Pap POS — KES 300/month, billed via M-Pesa.</div>
   <button class="cta-btn" onclick="openModal('register')">Get Started →</button>
 </section>
 
@@ -609,7 +610,7 @@ footer { background: var(--bg2); border-top: 1.5px solid var(--border); padding:
           <div class="payment-box">
             <div class="payment-amount">
               <div class="payment-amount-label">Monthly</div>
-              <div class="payment-amount-val">KES 300</div>
+              <div class="payment-amount-val" id="payment-amount-val">KES 2</div>
             </div>
             <div style="font-size: 13px; color: var(--text2); margin-bottom: 14px; font-weight: 600;">Payment method</div>
             <div class="payment-method">
@@ -642,7 +643,7 @@ footer { background: var(--bg2); border-top: 1.5px solid var(--border); padding:
               </div>
             </div>
           </div>
-          <button class="form-submit" id="pay-btn" onclick="processPayment()">📱 Pay KES 300 via M-Pesa</button>
+          <button class="form-submit" id="pay-btn" onclick="processPayment()">📱 Pay via M-Pesa</button>
           <div style="text-align: center; margin-top: 12px">
             <button onclick="backToStep1()" style="background: none; border: none; color: var(--text3); font-size: 13px; cursor: pointer; font-weight: 500;">← Back</button>
           </div>
@@ -693,8 +694,9 @@ footer { background: var(--bg2); border-top: 1.5px solid var(--border); padding:
           style="width: 100%; padding: 12px; border-radius: var(--r2); border: 1.5px solid var(--border); background: transparent; color: var(--text2); cursor: pointer; font-size: 13px; font-family: var(--f); font-weight: 600; transition: all 0.15s;"
           onmouseover="this.style.borderColor = 'var(--accent)'; this.style.color = 'var(--accent)';"
           onmouseout="this.style.borderColor = 'var(--border)'; this.style.color = 'var(--text2)';"
+          id="signup-btn-text"
         >
-          Create account — KES 300/month
+          Create account
         </button>
       </div>
     </div>
@@ -732,10 +734,43 @@ footer { background: var(--bg2); border-top: 1.5px solid var(--border); padding:
 <div class="toast-wrap" id="toasts"></div>
 
 <script>
-/* const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-  ? 'http://localhost:8000'
-  : 'https://uzazpap-by7v.onrender.com'; */
-  const API = 'https://uzazpop-by7v.onrender.com'
+const API = 'https://uzazpop-by7v.onrender.com'
+
+// ── Dynamic fee state (fetched from server on page load) ──────────────
+let REG_FEE = 300       // default fallback
+let REG_FEE_LABEL = 'KES 300'
+
+async function fetchFee() {
+  try {
+    const r = await fetch(API + '/auth/registration-fee')
+    if (r.ok) {
+      const d = await r.json()
+      REG_FEE = d.amount
+      REG_FEE_LABEL = d.label
+      applyFeeToPage()
+    }
+  } catch(e) {
+    // fallback to defaults
+  }
+}
+
+function applyFeeToPage() {
+  // Hero
+  document.getElementById('hero-price').textContent = REG_FEE_LABEL
+  document.getElementById('hero-btn').textContent = `Start for ${REG_FEE_LABEL} →`
+  document.getElementById('stat-price').textContent = REG_FEE_LABEL
+  // Testimonial
+  document.getElementById('testimonial-price').textContent = REG_FEE_LABEL
+  // CTA
+  document.getElementById('cta-sub').textContent =
+    `Join hundreds of Kenyan pharmacies already using Uza Pap POS — ${REG_FEE_LABEL}/month, billed via M-Pesa.`
+  // Modal
+  document.getElementById('payment-amount-val').textContent = REG_FEE_LABEL
+  document.getElementById('pay-btn').textContent = `📱 Pay ${REG_FEE_LABEL} via M-Pesa`
+  document.getElementById('signup-btn-text').textContent = `Create account — ${REG_FEE_LABEL}/month`
+}
+// Fetch fee immediately
+fetchFee()
 
 function toast(msg, type='info', ms=4000) {
   const w = document.getElementById('toasts');
@@ -862,7 +897,7 @@ function selectPayMethod(method, btn) {
   btn.classList.add('active');
   document.getElementById('mpesa-instructions').style.display = 'block';
   document.getElementById('card-instructions').style.display = 'none';
-  document.getElementById('pay-btn').textContent = '📱 Pay KES 300 via M-Pesa';
+  document.getElementById('pay-btn').textContent = `📱 Pay ${REG_FEE_LABEL} via M-Pesa`;
 }
 
 async function processPayment() {
@@ -922,8 +957,7 @@ async function processPayment() {
           document.getElementById('pay-btn').disabled = false;
           showRegError(sd.result_desc || 'Payment was not completed. Try again.');
         }
-        // else still PENDING — keep polling
-      } catch(e) { /* transient hiccup — next poll will retry */ }
+      } catch(e) { /* transient hiccup */ }
     }, 4000);
 
   } catch(e) {
@@ -933,7 +967,6 @@ async function processPayment() {
 }
 
 async function goToSystemAfterPayment() {
-  // Auto sign-in with the credentials just created, then go straight into the POS
   try {
     const r = await fetch(API + '/auth/login', {
       method: 'POST', headers: {'Content-Type':'application/json'},
@@ -943,15 +976,12 @@ async function goToSystemAfterPayment() {
     if (r.ok) {
       localStorage.setItem('pos_token', d.access_token);
       if (d.refresh_token) localStorage.setItem('pos_refresh_token', d.refresh_token);
-      // The main app's session-restore check needs cached user info too,
-      // not just the token — fetch and store it before redirecting.
       const meRes = await fetch(API + '/auth/me', { headers: {'Authorization': `Bearer ${d.access_token}`} });
       if (meRes.ok) localStorage.setItem('pos_me', JSON.stringify(await meRes.json()));
       window.location.href = '/';
       return;
     }
   } catch(e) {}
-  // Fallback: if auto sign-in didn't work for any reason, send them to sign in manually
   switchTab('login');
   toast('Account created — please sign in.','info',5000);
 }
@@ -974,7 +1004,6 @@ async function doLogin() {
     if (!r.ok) { showLoginError(d.message || d.detail || 'Invalid credentials'); return; }
     localStorage.setItem('pos_token', d.access_token);
     if (d.refresh_token) localStorage.setItem('pos_refresh_token', d.refresh_token);
-    // Same as above — cache user info so the main app auto-restores the session.
     const meRes = await fetch(API + '/auth/me', { headers: {'Authorization': `Bearer ${d.access_token}`} });
     if (meRes.ok) localStorage.setItem('pos_me', JSON.stringify(await meRes.json()));
     toast('Signing in...', 'success', 2000);
