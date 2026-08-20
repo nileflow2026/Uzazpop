@@ -96,6 +96,23 @@ async def lifespan(app: FastAPI):
                         "IMPORTANT: Change the default admin password immediately after first login!"
                     )
 
+
+        users = db.query(User).order_by(User.id).all()
+        logger.info("User database report: %d user(s)", len(users))
+        for user in users:
+            logger.info(
+                "User id=%s name=%s email=%s role=%s active=%s phone=%s pharmacy=%s "
+                "created_at=%s last_login=%s",
+                user.id,
+                user.full_name,
+                user.email,
+                user.role.value if user.role else None,
+                user.is_active,
+                user.phone,
+                user.pharmacy_name,
+                user.created_at,
+                user.last_login,
+            )
         # 3. Initial expiry scan
         scan_expiry_alerts(db)
 

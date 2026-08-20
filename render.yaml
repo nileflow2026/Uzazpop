@@ -31,10 +31,10 @@ services:
 
       # ── App ──────────────────────────────────────────────────────────
       - key: ALLOWED_ORIGINS
-        value: '["https://uzazpop.onrender.com"]'
+        value: '["https://uzazpap.memeyai.com","https://uzazpop-by7v.onrender.com"]'
 
       - key: TRUSTED_HOSTS
-        value: '["uzazpop.onrender.com"]'
+        value: '["uzazpop-by7v.onrender.com"]'
 
       - key: APP_NAME
         value: "Uza Pap POS"
@@ -56,7 +56,7 @@ services:
       - key: MPESA_PASSKEY
         sync: false
       - key: MPESA_CALLBACK_URL
-        value: https://uzazpop.onrender.com/payments/mpesa/callback
+        value: https://uzazpop-by7v.onrender.com/payments/mpesa/callback
       - key: MPESA_ENV
         value: sandbox
 
@@ -76,5 +76,6 @@ services:
 
 databases:
   - name: flex-pos-db
+    postgresMajorVersion: "18"
     plan: free
     region: oregon

@@ -271,9 +271,11 @@ def get_payment_status(
     if not txn:
         raise HTTPException(status_code=404, detail="Transaction not found")
 
-    # If still pending after 70s, query Safaricom directly
+    # If still pending after 20s, query Safaricom directly before the frontend
+    # payment window expires, so a missed callback cannot leave a paid signup
+    # without a persisted User row.
     # ── Self-registration: create the admin account if payment succeeded ──
-    # This runs on EVERY status check (not just after 70s fallback) so the
+    # This runs on EVERY status check (not just after the fallback) so the
     # account is created as soon as the status flips to SUCCESS, whether
     # that happened via callback, fallback query, or manual update.
     # This prevents the race condition where the frontend sees SUCCESS and
@@ -284,7 +286,7 @@ def get_payment_status(
         if created.tzinfo is None:
             created = created.replace(tzinfo=timezone.utc)
         age_seconds = (datetime.now(timezone.utc) - created).total_seconds()
-        if age_seconds > 70:
+        if age_seconds > 20:
             try:
                 result = query_stk_status(checkout_request_id)
                 result_code = int(result.get("ResultCode", -1))

@@ -78,8 +78,6 @@ class Settings(BaseSettings):
     ALLOWED_ORIGINS: list[str] = [
         "http://localhost:3000",
         "http://localhost:5173",
-        "https://uzazpop.onrender.com",
-        "https://uzazpop-frontend.onrender.com",
         "https://uzazpap.memeyai.com",
         "https://uzazpop-by7v.onrender.com"
     ]
@@ -87,10 +85,7 @@ class Settings(BaseSettings):
     TRUSTED_HOSTS: list[str] = [
         "localhost",
         "127.0.0.1",
-        "uzazpop.onrender.com", 
-        "uzazpop-frontend.onrender.com"
-        "https://uzazpap.memeyai.com",
-        "https://uzazpop-by7v.onrender.com"
+        "uzazpop-by7v.onrender.com"
     ]
 
     # ── Validators ────────────────────────────────────────────────────────
