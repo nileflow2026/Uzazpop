@@ -59,6 +59,15 @@ def _resolve_database_url(raw_url: str) -> str:
 
 DATABASE_URL = _resolve_database_url(settings.DATABASE_URL)
 
+# Never let a deployed service silently create an ephemeral SQLite database.
+# Production must use the Render-managed PostgreSQL database so all devices
+# share the same users and transactions.
+if not settings.DEBUG and DATABASE_URL.startswith("sqlite"):
+    raise RuntimeError(
+        "Production DATABASE_URL is SQLite or missing. Configure Render's "
+        "DATABASE_URL with the PostgreSQL connection string before deploying."
+    )
+
 
 # ── Engine ────────────────────────────────────────────────────────────────────
 # connect_args with check_same_thread is SQLite-only.
